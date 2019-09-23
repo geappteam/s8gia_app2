@@ -43,6 +43,30 @@ logger = logging.getLogger(__name__)
 ################################
 # Define helper functions here
 ################################
+class NNetController(object):
+    def __init__(self):
+        logger.info('-----------------------------------------------------------')
+        logger.info('----------------LOADING TRAINED NNET MODEL-----------------')
+        logger.info('-----------------------------------------------------------')
+        
+        #model = load_model('nnet.h5')   
+        
+        
+    
+    def drive(self, state):
+        #TODO : Add nnet model input update for giving state
+        
+        #prediction = model.predict(data)
+        
+        #accel, brake = self._calculateAcceleration(state)
+        #gear = self._calculateGear(state)
+        #steer = self._calculateSteering(state)
+        
+        action = {'accel': np.array([accel], dtype=np.float32),
+                  'brake': np.array([brake], dtype=np.float32),
+                  'gear': np.array([gear], dtype=np.int32),
+                  'steer': np.array([steer], dtype=np.float32)}
+        return action
 
 def main():
 
@@ -51,8 +75,9 @@ def main():
         os.makedirs(recordingsPath)
 
     try:
-        with TorcsControlEnv(render=False) as env:
-
+        with TorcsControlEnv(render=True) as env:
+            controller = NNetController()
+            
             nbTracks = len(TorcsControlEnv.availableTracks)
             nbSuccessfulEpisodes = 0
             for episode in range(nbTracks):
@@ -69,6 +94,7 @@ def main():
                     while not done:
                         # TODO: Select the next action based on the observation
                         action = env.action_space.sample()
+                        #action = controller.drive(observation)
                         recorder.save(observation, action)
     
                         # Execute the action
