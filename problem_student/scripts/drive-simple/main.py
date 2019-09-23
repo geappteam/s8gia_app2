@@ -261,11 +261,12 @@ def main():
         os.makedirs(recordingsPath)
 
     try:
-        with TorcsControlEnv(render=False) as env:
+        with TorcsControlEnv(render=True) as env:
             controller = SimpleController()
 
             nbTracks = len(TorcsControlEnv.availableTracks)
             nbSuccessfulEpisodes = 0
+
             for episode in range(nbTracks):
                 logger.info('Episode no.%d (out of %d)' % (episode + 1, nbTracks))
                 startTime = time.time()
@@ -278,19 +279,21 @@ def main():
                 done = False
                 with EpisodeRecorder(os.path.join(recordingsPath, 'track-%s.pklz' % (trackName))) as recorder:
                     while not done:
+
                         # Select the next action based on the observation
                         action = controller.drive(observation)
                         recorder.save(observation, action)
-    
+
                         # Execute the action
                         observation, reward, done, _ = env.step(action)
                         curNbSteps += 1
-    
+
                         if observation and curNbSteps % nbStepsShowStats == 0:
                             curLapTime = observation['curLapTime'][0]
                             distRaced = observation['distRaced'][0]
                             logger.info('Current lap time = %4.1f sec (distance raced = %0.1f m)' % (curLapTime, distRaced))
-    
+                            logger.info('Observations are %s' % (observation))
+                            logger.info('Actions are %s' % (action))
                         if done:
                             if reward > 0.0:
                                 logger.info('Episode was successful.')

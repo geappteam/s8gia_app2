@@ -32,6 +32,7 @@ import sys
 import time
 import logging
 import numpy as np
+import matplotlib.pyplot as plt
 import skfuzzy as fuzzy
 
 sys.path.append('../..')
@@ -63,6 +64,7 @@ class FuzzyController(object):
     # Output:
     # - GEAR, the selected gear. -1 is reverse, 0 is neutral and the forward gear can range from 1 to 6.
     #
+
     def _calculateGear(self, state):
 
         # Generer l'univers de discours (universe variables)
@@ -73,7 +75,7 @@ class FuzzyController(object):
         # Generer les fonctions d'appartenance (membership functions)
         rpmL = fuzzy.trapmf(x_rpm, [0,0, 6500, 8000])
         rpmM = fuzzy.trimf(x_rpm, [6500, 8000, 9500])
-        rpmH = fuzzy.trapmf(x_rpm, [800, 9500, 10000, 10000])
+        rpmH = fuzzy.trapmf(x_rpm, [8000, 9500, 10000, 10000])
 
         speedL = fuzzy.trimf(x_speed, [0., 0., 62.5])
         speedML = fuzzy.trimf(x_speed, [0., 62.5, 125])
@@ -90,13 +92,102 @@ class FuzzyController(object):
         gear5 = fuzzy.trimf(x_gear, [4, 5, 6])
         gear6 = fuzzy.trimf(x_gear, [5, 6, 6])
 
+#        # Membership functions Graph
+#        fig, (rpmMF, speedMF, gearMF) = plt.subplots(nrows=3, figsize = (10, 10))
+#
+#        rpmMF.plot(x_rpm, rpmL, 'b', linewidth = 1.5, label = 'Low RPM')
+#        rpmMF.plot(x_rpm, rpmM, 'g', linewidth = 1.5, label = 'Medium RPM')
+#        rpmMF.plot(x_rpm, rpmH, 'r', linewidth = 1.5, label = 'Hgh RPM')
+#        rpmMF.set_title('RPM')
+#        rpmMF.legend()
+#
+#        speedMF.plot(x_speed, speedL, 'b', linewidth = 1.5, label = 'Low speed')
+#        speedMF.plot(x_speed, speedML, 'y', linewidth = 1.5, label = 'Medium Low speed')
+#        speedMF.plot(x_speed, speedM, 'g', linewidth = 1.5, label = 'Medium speed')
+#        speedMF.plot(x_speed, speedMH, 'c', linewidth = 1.5, label = 'Medium High speed')
+#        speedMF.plot(x_speed, speedH, 'r', linewidth = 1.5, label = 'Hgh speed')
+#        speedMF.set_title('Speed')
+#        speedMF.legend()
+#
+#        gearMF.plot(x_gear, gearR, 'b', linewidth = 1.5, label = 'Reverse')
+#        gearMF.plot(x_gear, gearN, 'y', linewidth = 1.5, label = 'Neutral')
+#        gearMF.plot(x_gear, gear1, 'g', linewidth = 1.5, label = '1st')
+#        gearMF.plot(x_gear, gear2, 'm', linewidth = 1.5, label = '2nd')
+#        gearMF.plot(x_gear, gear3, 'r', linewidth = 1.5, label = '3rd')
+#        gearMF.plot(x_gear, gear4, 'g', linewidth = 1.5, label = '4th')
+#        gearMF.plot(x_gear, gear5, 'k', linewidth = 1.5, label = '5th')
+#        gearMF.plot(x_gear, gear6, 'r', linewidth = 1.5, label = '6th')
+#        gearMF.set_title('Gear')
+#        gearMF.legend()
+#
+#        for graph in (rpmMF, speedMF, gearMF):
+#            graph.spines['top'].set_visible(False)
+#            graph.spines['right'].set_visible(False)
+#            graph.get_xaxis().tick_bottom()
+#            graph.get_yaxis().tick_left()
+#
+#        plt.tight_layout()
 
+        # Get current crisp values
         curGear = state['gear'][0]
         curRpm = state['rpm'][0]
-        # Total speed is calculated using pythagoras
-        curSpeed = np.sqrt(np.sum(np.power(state['speed'], 2)))
+        curSpeed = np.sqrt(np.sum(np.power(state['speed'], 2))) # Total speed is calculated using pythagoras
+
+        # Determin the membership value of current input values for each linguistic value
+        rpmLevelL = fuzzy.interp_membership(x_rpm, rpmL, curRpm)
+        rpmLevelM = fuzzy.interp_membership(x_rpm, rpmM, curRpm)
+        rpmLevelH = fuzzy.interp_membership(x_rpm, rpmH, curRpm)
+
+        speedLevelL = fuzzy.interp_membership(x_speed, speedL, curSpeed)
+        speedLevelML = fuzzy.interp_membership(x_speed, speedML, curSpeed)
+        speedLevelM = fuzzy.interp_membership(x_speed, speedM, curSpeed)
+        speedLevelMH = fuzzy.interp_membership(x_speed, speedMH, curSpeed)
+        speedLevelH = fuzzy.interp_membership(x_speed, speedH, curSpeed)
+
+        # Rules
+        #If speed is L and rpm is H, then gear is: 1
+        #If speed is ML and rpm is H, then gear is: 2
+        #If speed is M and rpm is H, then gear is: 3
+        #If speed is MH and rpm is H, then gear is: 4
+        #If speed is H and rpm is H, then gear is: 5
+        activationRule1 = np.fmin(speedLevelL, rpmLevelH)
+        gearActivation1 = np.fmin(activationRule1, gear1)
+
+        activationRule2 = np.fmin(speedLevelML, rpmLevelH)
+        gearActivation2 = np.fmin(activationRule2, gear2)
+
+        activationRule3 = np.fmin(speedLevelM, rpmLevelH)
+        gearActivation3 = np.fmin(activationRule3, gear3)
+
+        activationRule4 = np.fmin(speedLevelMH, rpmLevelH)
+        gearActivation4 = np.fmin(activationRule4, gear4)
+
+        activationRule5 = np.fmin(speedLevelH, rpmLevelH)
+        gearActivation5 = np.fmin(activationRule5, gear5)
 
 
+#        fig, (rpmMF) = plt.subplots(figsize=(8,3))
+#
+#        gear0 = np.zeros_like(x_gear)
+#
+#        rpmMF.fill_between(x_gear, gear0, gearActivation1, facecolor = 'b', alpha = 0.7)
+#        rpmMF.plot(x_gear, gear1, 'b', linewidth = 0.5, linestyle = '--')
+#        rpmMF.fill_between(x_gear, gear0, gearActivation2, facecolor = 'r', alpha = 0.7)
+#        rpmMF.plot(x_gear, gear2, 'r', linewidth = 0.5, linestyle = '--')
+#        rpmMF.fill_between(x_gear, gear0, gearActivation3, facecolor = 'k', alpha = 0.7)
+#        rpmMF.plot(x_gear, gear3, 'k', linewidth = 0.5, linestyle = '--')
+#        rpmMF.fill_between(x_gear, gear0, gearActivation4, facecolor = 'g', alpha = 0.7)
+#        rpmMF.plot(x_gear, gear4, 'g', linewidth = 0.5, linestyle = '--')
+#        rpmMF.fill_between(x_gear, gear0, gearActivation5, facecolor = 'y', alpha = 0.7)
+#        rpmMF.plot(x_gear, gear5, 'y', linewidth = 0.5, linestyle = '--')
+
+        try:
+            aggregation = np.fmax(gearActivation1, np.fmax(gearActivation3, np.fmax(gearActivation4, gearActivation5)))
+            nextGear = fuzzy.defuzz(x_gear, aggregation, 'centroid')
+        except:
+            nextGear = 1
+
+#        nextGearActivation = fuzzy.interp_membership(x_gear, aggregation, nextGear)
 
         return nextGear
 
@@ -273,10 +364,11 @@ def main():
         os.makedirs(recordingsPath)
 
     try:
-        with TorcsControlEnv(render=False) as env:
+        with TorcsControlEnv(render=True) as env:
             controller = FuzzyController()
             
-            nbTracks = len(TorcsControlEnv.availableTracks)
+#            nbTracks = len(TorcsControlEnv.availableTracks)
+            nbTracks = 1
             nbSuccessfulEpisodes = 0
             for episode in range(nbTracks):
                 logger.info('Episode no.%d (out of %d)' % (episode + 1, nbTracks))

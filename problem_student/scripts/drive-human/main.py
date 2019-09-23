@@ -54,7 +54,8 @@ def main():
     try:
         with TorcsHumanEnv() as env:
 
-            nbTracks = len(TorcsHumanEnv.availableTracks)
+            #nbTracks = len(TorcsHumanEnv.availableTracks)
+            nbTracks = (int)(np.ceil(len(TorcsHumanEnv.availableTracks) * np.random.random()))
             nbSuccessfulEpisodes = 0
             for episode in range(nbTracks):
                 logger.info('Episode no.%d (out of %d)' % (episode + 1, nbTracks))
