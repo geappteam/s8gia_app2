@@ -34,12 +34,12 @@ logger = logging.getLogger(__name__)
 ###############################################
 # Define helper functions here
 ###############################################
-def loadDataArrayDictionary(pklzFileName):
+def loadEpisodeArrayDictionary(pklzFileName):
     recordingFilename = os.path.join(CDIR, 'recordings', pklzFileName)
     episode = EpisodeRecorder.restore(recordingFilename)
     return episode.states
 
-def selectDataArrayDictionary(states):
+def selectStatesVariablesArrayDictionary(states):
     #Selection is hardcoded for now. It would be better to specify as arguments
     # Selected 14 data (also known as number of inputs chosen) :
     # - angle
@@ -57,9 +57,14 @@ def selectDataArrayDictionary(states):
     # - wheelSpinVel[2]
     # - wheelSpinVel[3]
     
+    # Selected 4 targets (also known as number of outputs chosen) :
+    # - accelCmd
+    # - brakeCmd
+    # - steerCmd
+    # - gearCmd
+    
     selectedStates = list()
-    
-    
+      
     for state in states:
         selectedState = {
                     'angle': state['angle'][0],
@@ -96,60 +101,37 @@ def selectDataArrayDictionary(states):
                     'wheelSpinVel1': state['wheelSpinVel'][1],
                     'wheelSpinVel2': state['wheelSpinVel'][2],
                     'wheelSpinVel3': state['wheelSpinVel'][3]
-#                    ,
-#                    'accelCmd': state['accelCmd'][0],
-#                    'brakeCmd': state['brakeCmd'][0], 
-#                    'steerCmd': state['steerCmd'][0], 
-#                    'gearCmd': state['gearCmd'][0]
+                    ,
+                    'accelCmd': state['accelCmd'][0],
+                    'brakeCmd': state['brakeCmd'][0], 
+                    'steerCmd': state['steerCmd'][0], 
+                    'gearCmd': state['gearCmd'][0]
                 }
         selectedStates.append(selectedState)
     return selectedStates
 
-#TODO *Important*: Needs to buffer target datasets for fitting, 
-#      to be continued...
-#def selectTargetArrayDictionary(states):
-
-#TODO Optional: Could be interesting to filter out noisy data(ones in the extremes), 
-#      to be continued...
-#def filterDataArrayDictionary(states):
-
-#TODO Optional: Could be interesting to shuffle every data, changing the training order, 
-#      to be continued...
-#def shuffleDataArrayDictionary(states):
-    
-#TODO *Important*: Needs to separate datasets for one training dataset and one testing dataset, 
-#      to be continued...
-def seperateTrainingTestingDatasets(states, trainPercent, testPercent):
-
-    return trainSet, testSet
-
-def scaleDataArrayDictionary(states):
-    #TODO : Put this function out (rather in the main())
-    #       and modify it so it's not hardcoded
-    selectedStates = selectDataArrayDictionary(states)
-
+def normalizeStatesArrayDictionary(states):
     #Recognize all the keys just in the first dictionary
     #of the array
     keys = list()
-    for key in selectedStates[0]:
+    for key in states[0]:
         keys.append(key)
         
     #Find both min and max value for all given keys 
     #initializing with first and second dictionary
-    minValues = selectedStates[0]
-    maxValues = selectedStates[1]
+    minValues = states[0]
+    maxValues = states[1]
     
-    for state in selectedStates:
+    for state in states:
         for key in keys:
             if state[key] < minValues[key]:
                 minValues[key] = state[key]
-                #print('minValues[key]: %s' % (minValues[key]))
             if state[key] > maxValues[key]:
                 maxValues[key] = state[key]
     
     #Normalize all data values
     normalizedStates = list()
-    for state in selectedStates:
+    for state in states:
         normalizedState = {}
         for key in keys:
             normalizedState[key] = (state[key]-minValues[key])/(maxValues[key]-minValues[key])
@@ -157,14 +139,139 @@ def scaleDataArrayDictionary(states):
     
     return normalizedStates, keys
 
+def seperateTrainTestArrayDictionary(states, trainPercent):
+    #Must be in the range of 0 to 100
+    if trainPercent > 100 or trainPercent < 0:
+        print('[ERROR] : Training and testing percentage are disproportionate')
+        return
+    #We'll want to assume train percentage is always greater than the test percentage
+    elif trainPercent < 50:
+        print('[WARNING] : Training percentage is lower than testing percentage, may leading to a bad neural model design')
+    
+    statesLength = len(states)
+    
+    trainLenght = int(statesLength * trainPercent / 100)
+    
+    #Sets separation
+    trainStates = states[0:trainLenght-1]
+    testStates = states[trainLenght:statesLength-1]
+    
+    return trainStates, testStates
+
+def selectTargetArrayDictionary(states):
+    #Selection is hardcoded for now. It would be better to specify as arguments 
+    # Selected 4 targets (also known as number of outputs chosen) :
+    # - accelCmd
+    # - brakeCmd
+    # - steerCmd
+    # - gearCmd
+    
+    selectedStates = list()
+      
+    for state in states:
+        selectedState = {
+                            'accelCmd': state['accelCmd'],
+                            'brakeCmd': state['brakeCmd'], 
+                            'steerCmd': state['steerCmd'], 
+                            'gearCmd': state['gearCmd']
+                        }
+        selectedStates.append(selectedState)
+    return selectedStates
+    
+def selectDataArrayDictionary(states):
+    #Selection is hardcoded for now. It would be better to specify as arguments
+    # Selected 14 data (also known as number of inputs chosen) :
+    # - angle
+    # - distRaced
+    # - gear
+    # - rpm
+    # - speedX
+    # - speedY
+    # - track[0] #First value (at -pi/2)
+    # - track[9] #Middle value (at 0)
+    # - track[18] # Last value (at +pi/2)
+    # - trackPos
+    # - wheelSpinVel[0]
+    # - wheelSpinVel[1]
+    # - wheelSpinVel[2]
+    # - wheelSpinVel[3]
+    
+    selectedStates = list()
+      
+    for state in states:
+        selectedState = {
+                    'angle': state['angle'],
+#                    'curLapTime': state['curLapTime'],
+#                    'damage': state['damage'],
+#                    'distFromStart': state['distFromStart'],
+                    'distRaced': state['distRaced'],
+#                    'fuel': state['fuel'],
+                    'gear': state['gear'],
+                    'rpm': state['rpm'],
+                    'speedX': state['speedX'],
+                    'speedY': state['speedY'],
+                    'track0': state['track0'],
+#                    'track1': state['track1'],
+#                    'track2': state['track2'],
+#                    'track3': state['track3'],
+#                    'track4': state['track4'],
+#                    'track5': state['track5'],
+#                    'track6': state['track6'],
+#                    'track7': state['track7'],
+#                    'track8': state['track8'],
+                    'track9': state['track9'],
+#                    'track10': state['track10'],
+#                    'track11': state['track11'],
+#                    'track12': state['track12'],
+#                    'track13': state['track13'],
+#                    'track14': state['track14'],
+#                    'track15': state['track15'],
+#                    'track16': state['track16'],
+#                    'track17': state['track17'],
+                    'track18': state['track18'],
+                    'trackPos': state['trackPos'], 
+                    'wheelSpinVel0': state['wheelSpinVel0'],
+                    'wheelSpinVel1': state['wheelSpinVel1'],
+                    'wheelSpinVel2': state['wheelSpinVel2'],
+                    'wheelSpinVel3': state['wheelSpinVel3']
+                }
+        selectedStates.append(selectedState)
+    return selectedStates
+    
+#TODO Optional: Could be interesting to filter out noisy data(ones in the extremes), 
+#      to be continued...
+#def filterDataArrayDictionary(states):
+
+#TODO Optional: Could be interesting to shuffle every data, changing the training order, 
+#      to be continued...
+#def shuffleDataArrayDictionary(states):
+
 ###############################################
 # Define code logic here
 ###############################################
 
 def main():
-    #Prepare data
-    states = loadDataArrayDictionary('track.pklz')
-    states, keys = scaleDataArrayDictionary(states)
+    #Load data
+    states = loadEpisodeArrayDictionary('track.pklz')
+    #Selecting and buffering chosen state variables
+    states = selectStatesVariablesArrayDictionary(states)
+    #Normalize all state variables in a range of [0,1]
+    states, keys = normalizeStatesArrayDictionary(states)
+    #Create a portion of states for training (second argument in the range of [0,100]) 
+    #and anthoner one for testing
+    trainStates, testStates = seperateTrainTestArrayDictionary(states, 75)
+    
+    #Train sets expected values
+    trainTargetStates = selectTargetArrayDictionary(trainStates)
+    #Train sets input values
+    trainDataStates = selectDataArrayDictionary(trainStates)
+    
+    #Test sets expected values
+    testTargetStates = selectTargetArrayDictionary(testStates)
+    #Test sets input values
+    testDataStates = selectDataArrayDictionary(testStates)    
+    
+    
     
     # Create neural network
     model = Sequential()
@@ -179,22 +286,22 @@ def main():
     model.compile(optimizer=SGD(lr=0.1, momentum=0.9),
                   loss='mse')
 
-#    # Perform training
-#    # TODO : Tune the maximum number of iterations and desired error
-#    model.fit(data, target, batch_size=len(data),
-#              epochs=1000, shuffle=True, verbose=1)
-#
-#    # Save trained model to disk
-#    model.save('nnet.h5')
-#
-#    # Test model (loading from disk)
-#    model = load_model('nnet.h5')
-#    targetPred = model.predict(data)
-#
-#    # Print the number of classification errors from the training data
-#    nbErrors = np.sum(np.argmax(targetPred, axis=-1) != np.argmax(target, axis=-1))
-#    accuracy = (len(data) - nbErrors) / len(data)
-#    print('Classification accuracy: %0.3f' % (accuracy))
+    # Perform training
+    # TODO : Tune the maximum number of iterations and desired error
+    model.fit(trainDataStates, trainTargetStates, batch_size=len(trainDataStates),
+              epochs=1000, shuffle=True, verbose=1)
+
+    # Save trained model to disk
+    model.save('nnet.h5')
+
+    # Test model (loading from disk)
+    model = load_model('nnet.h5')
+    targetPred = model.predict(testDataStates)
+
+    # Print the number of classification errors from the training data
+    nbErrors = np.sum(np.argmax(targetPred, axis=-1) != np.argmax(testTargetStates, axis=-1))
+    accuracy = (len(testDataStates) - nbErrors) / len(testDataStates)
+    print('Classification accuracy: %0.3f' % (accuracy))
 
 
 if __name__ == "__main__":
