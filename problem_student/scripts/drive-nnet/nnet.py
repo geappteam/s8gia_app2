@@ -40,7 +40,7 @@ def loadDataArrayDictionary(pklzFileName):
     return episode.states
 
 def selectDataArrayDictionary(states):
-    #Selection hardcoded for now, would be nice to specify as arguments
+    #Selection is hardcoded for now. It would be better to specify as arguments
     # Selected 14 data (also known as number of inputs chosen) :
     # - angle
     # - distRaced
@@ -105,39 +105,57 @@ def selectDataArrayDictionary(states):
         selectedStates.append(selectedState)
     return selectedStates
 
+#TODO *Important*: Needs to buffer target datasets for fitting, 
+#      to be continued...
+#def selectTargetArrayDictionary(states):
+
+#TODO Optional: Could be interesting to filter out noisy data(ones in the extremes), 
+#      to be continued...
+#def filterDataArrayDictionary(states):
+
+#TODO Optional: Could be interesting to shuffle every data, changing the training order, 
+#      to be continued...
+#def shuffleDataArrayDictionary(states):
+    
+#TODO *Important*: Needs to separate datasets for one training dataset and one testing dataset, 
+#      to be continued...
+def seperateTrainingTestingDatasets(states, trainPercent, testPercent):
+
+    return trainSet, testSet
+
 def scaleDataArrayDictionary(states):
     #TODO : Put this function out (rather in the main())
     #       and modify it so it's not hardcoded
     selectedStates = selectDataArrayDictionary(states)
-    print('selectedStates: %s' % (selectedStates))
+
     #Recognize all the keys just in the first dictionary
     #of the array
     keys = list()
     for key in selectedStates[0]:
         keys.append(key)
-            
+        
     #Find both min and max value for all given keys 
-    #initializing with first dictionary
+    #initializing with first and second dictionary
     minValues = selectedStates[0]
-    maxValues = selectedStates[0]
+    maxValues = selectedStates[1]
     
     for state in selectedStates:
         for key in keys:
             if state[key] < minValues[key]:
                 minValues[key] = state[key]
-                print('minValues[key]: %s' % (minValues[key]))
+                #print('minValues[key]: %s' % (minValues[key]))
             if state[key] > maxValues[key]:
                 maxValues[key] = state[key]
     
     #Normalize all data values
-    normSelStates = list()
+    normalizedStates = list()
     for state in selectedStates:
-        normSelState = {}
+        normalizedState = {}
         for key in keys:
-            normSelState[key] = (state[key]-minValues[key])/(maxValues[key]-minValues[key])
-            print('normSelState[key]: %s' % (normSelState[key]))
+            normalizedState[key] = (state[key]-minValues[key])/(maxValues[key]-minValues[key])
+        normalizedStates.append(normalizedState)
     
-    return selectedStates, keys
+    return normalizedStates, keys
 
 ###############################################
 # Define code logic here
@@ -147,20 +165,20 @@ def main():
     #Prepare data
     states = loadDataArrayDictionary('track.pklz')
     states, keys = scaleDataArrayDictionary(states)
+    
+    # Create neural network
+    model = Sequential()
+    model.add(Dense(units=10, activation='sigmoid',
+                    input_shape=(14,), name='input_layer'))
+    model.add(Dense(units=5, activation='sigmoid', name='hidden_layer'))
+    model.add(Dense(units=4, activation='sigmoid', name='output_layer'))
+    print(model.summary())
 
-#    # Create neural network
-#    model = Sequential()
-#    model.add(Dense(units=, activation='sigmoid',
-#                    input_shape=(,), name='input_layer'))
-#    model.add(Dense(units=5, activation='sigmoid'), name='hidden_layer')
-#    model.add(Dense(units=4, activation='sigmoid'), name='output_layer')
-#    print(model.summary())
-#
-#    # Define training parameters
-#    # TODO : Tune the training parameters
-#    model.compile(optimizer=SGD(lr=0.1, momentum=0.9),
-#                  loss='mse')
-#
+    # Define training parameters
+    # TODO : Tune the training parameters
+    model.compile(optimizer=SGD(lr=0.1, momentum=0.9),
+                  loss='mse')
+
 #    # Perform training
 #    # TODO : Tune the maximum number of iterations and desired error
 #    model.fit(data, target, batch_size=len(data),
