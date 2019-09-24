@@ -237,7 +237,18 @@ def selectDataArrayDictionary(states):
                 }
         selectedStates.append(selectedState)
     return selectedStates
+
+def arrayDictionaryToArrayArrayFloats(arrayDictionaryStates):
+    arrayArrayStates = list() 
     
+    for arrayDictionaryState in arrayDictionaryStates:
+        arrayArrayStates.append(list(arrayDictionaryState.values()))
+    
+    arrayArrayStates = np.array(arrayArrayStates, dtype=np.float32)
+    
+    return arrayArrayStates
+        
+
 #TODO Optional: Could be interesting to filter out noisy data(ones in the extremes), 
 #      to be continued...
 #def filterDataArrayDictionary(states):
@@ -271,7 +282,11 @@ def main():
     #Test sets input values
     testDataStates = selectDataArrayDictionary(testStates)    
     
-    
+    #Fitting function accepts array of arrays
+    trainTargetStates = arrayDictionaryToArrayArrayFloats(trainTargetStates)
+    trainDataStates = arrayDictionaryToArrayArrayFloats(trainDataStates)
+    testTargetStates = arrayDictionaryToArrayArrayFloats(testTargetStates)
+    testDataStates = arrayDictionaryToArrayArrayFloats(testDataStates) 
     
     # Create neural network
     model = Sequential()
