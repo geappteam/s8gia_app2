@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 # Copyright (c) 2018, Simon Brodeur
 # All rights reserved.
 #
@@ -71,19 +72,19 @@ def main():
                         observation, action, reward, done, _ = env.step()
                         recorder.save(observation, action)
                         curNbSteps += 1
-    
+
                         if observation and curNbSteps % nbStepsShowStats == 0:
                             curLapTime = observation['curLapTime'][0]
                             distRaced = observation['distRaced'][0]
                             logger.info('Current lap time = %4.1f sec (distance raced = %0.1f m)' % (curLapTime, distRaced))
-    
+
                         if done:
                             if reward > 0.0:
                                 logger.info('Episode was successful.')
                                 nbSuccessfulEpisodes += 1
                             else:
                                 logger.info('Episode was a failure.')
-    
+
                             elapsedTime = time.time() - startTime
                             logger.info('Episode completed in %0.1f sec (computation time).' % (elapsedTime))
 
