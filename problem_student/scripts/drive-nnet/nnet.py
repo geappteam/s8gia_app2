@@ -5,44 +5,32 @@ Created on Sun Sep 22 18:41:58 2019
 
 @author: Anthony Parris
 """
-###############################################
-import numpy as np
-import scipy.io
-import matplotlib.pyplot as plt
 
+import numpy as np
 from keras.models import Sequential, load_model
 from keras.layers import Dense
 from keras.optimizers import SGD
-from sklearn.decomposition.pca import PCA
-from mpl_toolkits.mplot3d import Axes3D
-###############################################
-
-###############################################
 import sys
 import os
 import logging
-import matplotlib.pyplot as plt
 
 sys.path.append('../..')
-from torcs.control.core import Episode, EpisodeRecorder
-
+from torcs.control.core import EpisodeRecorder
 CDIR = os.path.dirname(os.path.realpath(__file__))
-
 logger = logging.getLogger(__name__)
-###############################################
 
 ###############################################
 # Define global variables here
 ###############################################
 ### DATASETS PARAMETERS ###
-TRAIN_DATASETS_PERCENTAGE = 75
+TRAIN_DATASETS_PERCENTAGE = 98
 EPISODE_PATHS = ['track.pklz']
 
 # Selected input data :
 CHOSEN_INPUT_KEYS = {
                         'angle': ['angle', 0],
 #                        'curLapTime': ['curLapTime', 0],
-                        'damage': ['damage', 0],
+#                        'damage': ['damage', 0],
 #                        'distFromStart': ['distFromStart', 0],
 #                        'distRaced': ['distRaced', 0],
 #                        'fuel': ['fuel', 0],
@@ -86,7 +74,7 @@ INPUT_DATA_SHAPE = -1
 
 #OTHER LAYERS CONFIG
 MODEL_LAYERS_CONFIG =   [
-                            Dense(units=5, activation='sigmoid', name='hidden_layer'),
+                            Dense(units=15, activation='sigmoid', name='hidden_layer'),
                             Dense(units=4, activation='sigmoid', name='output_layer')
                         ]
 
@@ -157,11 +145,17 @@ def normalizeStatesArrayArray(states):
     normalizedStates = list()
     for state in states:
         normalizedState = list()
-        for variable in state:            
-            normalizedState.append(                                                         \
-                    (variable - minValues[state.index(variable)])                           \
-                    /                                                                       \
-                    (maxValues[state.index(variable)] - minValues[state.index(variable)]))
+        for variable in state:
+            #Ensuring maximum and minimum value clipping
+            if variable <= minValues[state.index(variable)] :
+                normalizedValue = minValues[state.index(variable)]
+            elif variable >= maxValues[state.index(variable)]:
+                normalizedValue = maxValues[state.index(variable)]
+            else: 
+                normalizedValue =   (variable - minValues[state.index(variable)])                           \
+                                    /                                                                       \
+                                    (maxValues[state.index(variable)] - minValues[state.index(variable)])
+            normalizedState.append(normalizedValue)                                                         
         normalizedStates.append(normalizedState)
     
     return normalizedStates
@@ -222,8 +216,6 @@ def main():
     
     #Test sets expected and input values
     testTargetStates, testDataStates = separateTargetAndDataArrayArray(testStates)  
-    
-    print('testTargetStates: %s' % (testTargetStates))
 
     #Normalize all state variables in a range of [0,1]
     trainDataStates = normalizeStatesArrayArray(trainDataStates)
@@ -266,7 +258,6 @@ def main():
     nbErrors = np.sum(np.argmax(targetPred, axis=-1) != np.argmax(testTargetStates, axis=-1))
     accuracy = (len(testDataStates) - nbErrors) / len(testDataStates)
     print('Classification accuracy: %0.3f' % (accuracy))
-
 
 if __name__ == "__main__":
     main()
