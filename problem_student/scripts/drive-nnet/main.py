@@ -27,10 +27,13 @@
 # Author: Simon Brodeur <simon.brodeur@usherbrooke.ca>
 # Université de Sherbrooke, APP3 S8GIA, A2018
 
+import numpy as np
 import os
 import sys
 import time
 import logging
+import nnet
+from keras.models import load_model
 
 sys.path.append('../..')
 from torcs.control.core import TorcsControlEnv, TorcsException, EpisodeRecorder
@@ -38,12 +41,6 @@ from torcs.control.core import TorcsControlEnv, TorcsException, EpisodeRecorder
 CDIR = os.path.dirname(os.path.realpath(__file__))
 
 logger = logging.getLogger(__name__)
-
-################################
-from keras.models import load_model
-
-import nnet 
-################################
 
 ################################
 # Define helper functions here
@@ -54,12 +51,24 @@ class NNetController(object):
         logger.info('----------------LOADING TRAINED NNET MODEL-----------------')
         logger.info('-----------------------------------------------------------')
         self.model = load_model('nnet.h5')   
+    
+#    def getModelMinMaxValueReferences(self):
+#        #Find both min and max value for all given state variables 
+#        #initializing with first and second array
+#        minValues = states[0]
+#        maxValues = states[0]
+#    
+#    for state in states:
+#        for variable in state:
+#            if variable < minValues[state.index(variable)]:
+#                minValues[state.index(variable)] = variable
+#            if variable > maxValues[state.index(variable)]:
+#                maxValues[state.index(variable)] = variable
         
     def drive(self, state):
-        
-        data = nnet.selectDataArrayDictionary(state)
-        data, keys = nnet.normalizeStatesArrayDictionary(data)
-        
+        data = nnet.selectStatesVariablesArrayDictionary([state], nnet.CHOSEN_INPUT_KEYS)
+        data = nnet.normalizeStatesArrayArray(data)
+        print('data: %s' % (data))
         prediction = self.model.predict(data)
         
         accel = prediction[0]

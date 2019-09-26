@@ -12,12 +12,10 @@ from keras.layers import Dense
 from keras.optimizers import SGD
 import sys
 import os
-import logging
 
 sys.path.append('../..')
 from torcs.control.core import EpisodeRecorder
 CDIR = os.path.dirname(os.path.realpath(__file__))
-logger = logging.getLogger(__name__)
 
 ###############################################
 # Define global variables here
@@ -132,7 +130,7 @@ def normalizeStatesArrayArray(states):
     #Find both min and max value for all given state variables 
     #initializing with first and second array
     minValues = states[0]
-    maxValues = states[1]
+    maxValues = states[0]
     
     for state in states:
         for variable in state:
@@ -260,7 +258,7 @@ def main():
     # Print the number of classification errors from the training data
     nbErrors = np.sum(np.argmax(targetPred, axis=-1) != np.argmax(testTargetStates, axis=-1))
     accuracy = (len(testDataStates) - nbErrors) / len(testDataStates)
-    print('Classification accuracy: %0.3f' % (accuracy))
+    print('Accuracy: %0.3f' % (accuracy))
 
 if __name__ == "__main__":
     main()
