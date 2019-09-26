@@ -1,4 +1,3 @@
-
 # Contains the necessary functions to encode genes and recover the elements
 
 import numpy as np
@@ -60,13 +59,13 @@ def encode(parameters, chromosone_format = default_gene_format):
         parameter_value = parameters[parameter_name][0]
         encoded_parameter = encode_parameter(
                 parameters[parameter_name][0], param['range'], param['bits'])
-        chromosone += encode_parameter
+        chromosone += encoded_parameter
     return chromosone
 
 def encode_parameter(param, limits, precision):
     constrained_param = np.clip(param, limits[0], limits[1])
     norm_param = (constrained_param - limits[0]) / (limits[1] - limits[0])
-    quantized_param = int(round(norm_param * (2**percision - 1)))
+    quantized_param = int(round(norm_param * (2**precision - 1)))
     return format(quantized_param, f'0{precision}b')
 
 
@@ -75,6 +74,7 @@ def decode(chromosone, chromosone_format = default_gene_format):
     parameters = {}
     for parameter_name, param in chromosone_format.items():
         encoded_parameter = chromosone[:param['bits']]
+        chromosone = chromosone[param['bits']:]
         parameter_value = decode_parameter(encoded_parameter, param['range'])
         parameters[parameter_name] = np.array([parameter_value])
     return parameters
