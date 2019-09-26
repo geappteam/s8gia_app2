@@ -21,7 +21,7 @@ CDIR = os.path.dirname(os.path.realpath(__file__))
 # Define global variables here
 ###############################################
 ### DATASETS PARAMETERS ###
-TRAIN_DATASETS_PERCENTAGE = 75
+TRAIN_DATASETS_PERCENTAGE = 80
 EPISODE_PATHS = ['track-aalborg.pklz', 'track-alpine-1.pklz']
 
 # Selected input data :
@@ -77,7 +77,7 @@ MODEL_LAYERS_CONFIG =   [
                         ]
 
 #COMPILATION CONFIG
-OPTIMIZER = SGD(lr=0.1, momentum=0.9)
+OPTIMIZER = SGD(lr=0.3, momentum=0.9)
 LOSS = 'mse'
 
 #FITTING CONFIG
@@ -98,6 +98,11 @@ OUTPUT_KEYS =   {
                     'steerCmd': ['steerCmd', 0], 
                     'gearCmd': ['gearCmd', 0]
                 }
+
+MIN_VALUES = list()
+MAX_VALUES = list()
+
+TRAINING_CONFIG_FILE = "training.config"
 
 ###############################################
 # Define helper functions here
@@ -126,19 +131,27 @@ def selectStatesVariablesArrayDictionary(states, selectedVariablesKeysIndexes):
         
     return selectedStates
 
-def normalizeStatesArrayArray(states):      
+def getMinMaxValuesStatesArrayArray(states):     
     #Find both min and max value for all given state variables 
-    #initializing with first and second array
-    minValues = states[0]
-    maxValues = states[0]
+    minValues = list()
+    maxValues = list()
     
     for state in states:
+        if not minValues:
+            minValues = states[0]
+        if not maxValues:
+            maxValues = states[-1]
+        index = 0
         for variable in state:
-            if variable < minValues[state.index(variable)]:
-                minValues[state.index(variable)] = variable
-            if variable > maxValues[state.index(variable)]:
-                maxValues[state.index(variable)] = variable
-    
+            if variable < minValues[index]:
+                minValues[index] = variable
+            elif variable > maxValues[index]:
+                maxValues[index] = variable
+            index = index + 1
+        
+    return minValues, maxValues
+
+def normalizeStatesArrayArray(states, minValues, maxValues):      
     #Normalize all data values
     normalizedStates = list()
     for state in states:
@@ -215,14 +228,18 @@ def main():
     #Test sets expected and input values
     testTargetStates, testDataStates = separateTargetAndDataArrayArray(testStates)  
 
-    #Normalize all state variables in a range of [0,1]
-    trainDataStates = normalizeStatesArrayArray(trainDataStates)
-    testDataStates = normalizeStatesArrayArray(testDataStates)
-    
-    trainTargetStates = normalizeStatesArrayArray(trainTargetStates)
-    testTargetStates = normalizeStatesArrayArray(testTargetStates)
+    #Get minimum and maximum values from datasets
+    global MIN_VALUES, MAX_VALUES
+    MIN_VALUES, MAX_VALUES = getMinMaxValuesStatesArrayArray(states)
 
-    #Fitting function accepts array of arrays of floats
+    #Normalize all state variables in a range of [0,1]
+    trainDataStates = normalizeStatesArrayArray(trainDataStates, MIN_VALUES[:-4], MAX_VALUES[:-4])
+    testDataStates = normalizeStatesArrayArray(testDataStates, MIN_VALUES[:-4], MAX_VALUES[:-4])
+    
+    trainTargetStates = normalizeStatesArrayArray(trainTargetStates, MIN_VALUES[-4:], MAX_VALUES[-4:])
+    testTargetStates = normalizeStatesArrayArray(testTargetStates, MIN_VALUES[-4:], MAX_VALUES[-4:])
+
+    #Fitting function accepts numpy array of arrays of floats
     trainTargetStates = arrayArrayToNumpyArrayArrayFloats(trainTargetStates)
     trainDataStates = arrayArrayToNumpyArrayArrayFloats(trainDataStates)
     testTargetStates = arrayArrayToNumpyArrayArrayFloats(testTargetStates)
@@ -250,6 +267,14 @@ def main():
 
     # Save trained model to disk
     model.save(MODEL_NAME)
+    
+    # Save minimum and mximum values in config file
+    f = open(TRAINING_CONFIG_FILE, "w")
+    f.write(" ".join(str(m) for m in MIN_VALUES))
+    f.write("\n")
+    f.write(" ".join(str(m) for m in MAX_VALUES))
+    f.write("\n")
+    f.close()
 
     # Test model (loading from disk)
     model = load_model(MODEL_NAME)

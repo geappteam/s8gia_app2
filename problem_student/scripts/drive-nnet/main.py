@@ -42,6 +42,14 @@ CDIR = os.path.dirname(os.path.realpath(__file__))
 
 logger = logging.getLogger(__name__)
 
+from sklearn.preprocessing import MinMaxScaler
+
+###############################################
+# Define constant variables here
+###############################################
+MIN_VALUES = list()
+MAX_VALUES = list()
+
 ################################
 # Define helper functions here
 ################################
@@ -50,26 +58,29 @@ class NNetController(object):
         logger.info('-----------------------------------------------------------')
         logger.info('----------------LOADING TRAINED NNET MODEL-----------------')
         logger.info('-----------------------------------------------------------')
-        self.model = load_model('nnet.h5')   
-    
-#    def getModelMinMaxValueReferences(self):
-#        #Find both min and max value for all given state variables 
-#        #initializing with first and second array
-#        minValues = states[0]
-#        maxValues = states[0]
-#    
-#    for state in states:
-#        for variable in state:
-#            if variable < minValues[state.index(variable)]:
-#                minValues[state.index(variable)] = variable
-#            if variable > maxValues[state.index(variable)]:
-#                maxValues[state.index(variable)] = variable
         
-    def drive(self, state):
+        self.model = load_model('nnet.h5')
+        
+        global MIN_VALUES, MAX_VALUES
+        minMaxValuesStr = [line.rstrip('\n') for line in open(nnet.TRAINING_CONFIG_FILE)]
+        MIN_VALUES = [float(element) for element in minMaxValuesStr[0].rstrip("").split(" ")]
+        MAX_VALUES = [float(element) for element in minMaxValuesStr[1].rstrip("").split(" ")]
+        
+        self.scalerIn = MinMaxScaler()
+        self.scalerIn.fit([MIN_VALUES[:-4],MAX_VALUES[:-4]])
+
+        self.scalerOut = MinMaxScaler()
+        self.scalerOut.fit([MAX_VALUES[-4:],MAX_VALUES[-4:]])
+        
+    def drive(self, state):      
         data = nnet.selectStatesVariablesArrayDictionary([state], nnet.CHOSEN_INPUT_KEYS)
-        data = nnet.normalizeStatesArrayArray(data)
-        print('data: %s' % (data))
+        data = self.scalerIn.transform(data)
+
         prediction = self.model.predict(data)
+        
+        print('prediction: %s' % (prediction))
+        
+        prediction = self.scalerOut.inverse_transform(prediction)
         
         accel = prediction[0]
         brake = prediction[1]
