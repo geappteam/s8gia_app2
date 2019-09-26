@@ -39,6 +39,11 @@ CDIR = os.path.dirname(os.path.realpath(__file__))
 
 logger = logging.getLogger(__name__)
 
+################################
+from keras.models import load_model
+
+import nnet 
+################################
 
 ################################
 # Define helper functions here
@@ -48,19 +53,19 @@ class NNetController(object):
         logger.info('-----------------------------------------------------------')
         logger.info('----------------LOADING TRAINED NNET MODEL-----------------')
         logger.info('-----------------------------------------------------------')
+        self.model = load_model('nnet.h5')   
         
-        #model = load_model('nnet.h5')   
-        
-        
-    
     def drive(self, state):
-        #TODO : Add nnet model input update for giving state
         
-        #prediction = model.predict(data)
+        data = nnet.selectDataArrayDictionary(state)
+        data, keys = nnet.normalizeStatesArrayDictionary(data)
         
-        #accel, brake = self._calculateAcceleration(state)
-        #gear = self._calculateGear(state)
-        #steer = self._calculateSteering(state)
+        prediction = self.model.predict(data)
+        
+        accel = prediction[0]
+        brake = prediction[1]
+        gear = prediction[2]
+        steer = prediction[3]
         
         action = {'accel': np.array([accel], dtype=np.float32),
                   'brake': np.array([brake], dtype=np.float32),
@@ -92,9 +97,8 @@ def main():
                 done = False
                 with EpisodeRecorder(os.path.join(recordingsPath, 'track-%s.pklz' % (trackName))) as recorder:
                     while not done:
-                        # TODO: Select the next action based on the observation
-                        action = env.action_space.sample()
-                        #action = controller.drive(observation)
+                        #Select the next action based on the observation
+                        action = controller.drive(observation)
                         recorder.save(observation, action)
     
                         # Execute the action

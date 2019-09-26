@@ -32,114 +32,141 @@ logger = logging.getLogger(__name__)
 ###############################################
 
 ###############################################
+# Define global variables here
+###############################################
+### DATASETS PARAMETERS ###
+TRAIN_DATASETS_PERCENTAGE = 75
+EPISODE_PATHS = ['track.pklz']
+
+# Selected input data :
+CHOSEN_INPUT_KEYS = {
+                        'angle': ['angle', 0],
+#                        'curLapTime': ['curLapTime', 0],
+                        'damage': ['damage', 0],
+#                        'distFromStart': ['distFromStart', 0],
+#                        'distRaced': ['distRaced', 0],
+#                        'fuel': ['fuel', 0],
+                        'gear': ['gear', 0],
+                        'rpm': ['rpm', 0],
+                        'speedX': ['speed', 0],
+                        'speedY': ['speed', 1],
+                        'track0': ['track', 0],
+#                        'track1': ['track', 1],
+#                        'track2': ['track', 2],
+#                        'track3': ['track', 3],
+#                        'track4': ['track', 4],
+#                        'track5': ['track', 5],
+#                        'track6': ['track', 6],
+#                        'track7': ['track', 7],
+                        'track8': ['track', 8],
+#                        'track9': ['track', 9],
+#                        'track10': ['track', 10],
+#                        'track11': ['track', 11],
+#                        'track12': ['track', 12],
+#                        'track13': ['track', 13],
+#                        'track14': ['track', 14],
+#                        'track15': ['track', 15],
+#                        'track16': ['track', 16],
+#                        'track17': ['track', 17],
+                        'track18': ['track', 18],
+                        'trackPos': ['trackPos', 0], 
+                        'wheelSpinVel0': ['wheelSpinVel', 0],
+                        'wheelSpinVel1': ['wheelSpinVel', 1],
+                        'wheelSpinVel2': ['wheelSpinVel', 2],
+                        'wheelSpinVel3': ['wheelSpinVel', 3]
+                    }
+
+### MODEL CONFIGS ###
+MODEL_NAME = 'nnet.h5'
+
+#INPUT LAYER CONFIG
+INPUT_UNITS = 10
+INPUT_ACTIVATION = 'sigmoid'
+INPUT_DATA_SHAPE = -1
+
+#OTHER LAYERS CONFIG
+MODEL_LAYERS_CONFIG =   [
+                            Dense(units=5, activation='sigmoid', name='hidden_layer'),
+                            Dense(units=4, activation='sigmoid', name='output_layer')
+                        ]
+
+#COMPILATION CONFIG
+OPTIMIZER = SGD(lr=0.1, momentum=0.9)
+LOSS = 'mse'
+
+#FITTING CONFIG
+EPOCHS = 1000
+SHUFFLE = True
+VERBOSE = 1
+
+###############################################
+# Define constant variables here
+###############################################
+### DATASETS PARAMETERS ###
+RECORDING_FOLDER_PATH = 'recordings'
+
+# Output data :
+OUTPUT_KEYS =   {
+                    'accelCmd': ['accelCmd', 0],
+                    'brakeCmd': ['brakeCmd', 0], 
+                    'steerCmd': ['steerCmd', 0], 
+                    'gearCmd': ['gearCmd', 0]
+                }
+
+###############################################
 # Define helper functions here
 ###############################################
-def loadEpisodeArrayDictionary(pklzFileName):
-    recordingFilename = os.path.join(CDIR, 'recordings', pklzFileName)
+def loadEpisodeArrayDictionary(episodePath):
+    recordingFilename = os.path.join(CDIR, RECORDING_FOLDER_PATH, episodePath)
     episode = EpisodeRecorder.restore(recordingFilename)
     return episode.states
 
-def selectStatesVariablesArrayDictionary(states):
-    #Selection is hardcoded for now. It would be better to specify as arguments
-    # Selected 14 data (also known as number of inputs chosen) :
-    # - angle
-    # - distRaced
-    # - gear
-    # - rpm
-    # - speedX
-    # - speedY
-    # - track[0] #First value (at -pi/2)
-    # - track[9] #Middle value (at 0)
-    # - track[18] # Last value (at +pi/2)
-    # - trackPos
-    # - wheelSpinVel[0]
-    # - wheelSpinVel[1]
-    # - wheelSpinVel[2]
-    # - wheelSpinVel[3]
-    
-    # Selected 4 targets (also known as number of outputs chosen) :
-    # - accelCmd
-    # - brakeCmd
-    # - steerCmd
-    # - gearCmd
-    
+def loadEpisodesArrayDictionary(episodesPaths):
+    concatenedStates = list()
+    for episodePath in episodesPaths :
+        states = loadEpisodeArrayDictionary(episodePath)
+        concatenedStates = concatenedStates + states
+    return concatenedStates
+
+def selectStatesVariablesArrayDictionary(states, selectedVariablesKeysIndexes):
     selectedStates = list()
       
     for state in states:
-        selectedState = {
-                    'angle': state['angle'][0],
-#                    'curLapTime': state['curLapTime'][0],
-#                    'damage': state['damage'][0],
-#                    'distFromStart': state['distFromStart'][0],
-                    'distRaced': state['distRaced'][0],
-#                    'fuel': state['fuel'][0],
-                    'gear': state['gear'][0],
-                    'rpm': state['rpm'][0],
-                    'speedX': state['speed'][0],
-                    'speedY': state['speed'][1],
-                    'track0': state['track'][0],
-#                    'track1': state['track'][1],
-#                    'track2': state['track'][2],
-#                    'track3': state['track'][3],
-#                    'track4': state['track'][4],
-#                    'track5': state['track'][5],
-#                    'track6': state['track'][6],
-#                    'track7': state['track'][7],
-#                    'track8': state['track'][8],
-                    'track9': state['track'][9],
-#                    'track10': state['track'][10],
-#                    'track11': state['track'][11],
-#                    'track12': state['track'][12],
-#                    'track13': state['track'][13],
-#                    'track14': state['track'][14],
-#                    'track15': state['track'][15],
-#                    'track16': state['track'][16],
-#                    'track17': state['track'][17],
-                    'track18': state['track'][18],
-                    'trackPos': state['trackPos'][0], 
-                    'wheelSpinVel0': state['wheelSpinVel'][0],
-                    'wheelSpinVel1': state['wheelSpinVel'][1],
-                    'wheelSpinVel2': state['wheelSpinVel'][2],
-                    'wheelSpinVel3': state['wheelSpinVel'][3]
-                    ,
-                    'accelCmd': state['accelCmd'][0],
-                    'brakeCmd': state['brakeCmd'][0], 
-                    'steerCmd': state['steerCmd'][0], 
-                    'gearCmd': state['gearCmd'][0]
-                }
+        selectedState = list()
+        for keyIndex in selectedVariablesKeysIndexes:
+            selectedState.append(state[selectedVariablesKeysIndexes[keyIndex][0]][selectedVariablesKeysIndexes[keyIndex][1]])
+            
         selectedStates.append(selectedState)
+        
     return selectedStates
 
-def normalizeStatesArrayDictionary(states):
-    #Recognize all the keys just in the first dictionary
-    #of the array
-    keys = list()
-    for key in states[0]:
-        keys.append(key)
-        
-    #Find both min and max value for all given keys 
-    #initializing with first and second dictionary
+def normalizeStatesArrayArray(states):      
+    #Find both min and max value for all given state variables 
+    #initializing with first and second array
     minValues = states[0]
     maxValues = states[1]
     
     for state in states:
-        for key in keys:
-            if state[key] < minValues[key]:
-                minValues[key] = state[key]
-            if state[key] > maxValues[key]:
-                maxValues[key] = state[key]
+        for variable in state:
+            if variable < minValues[state.index(variable)]:
+                minValues[state.index(variable)] = variable
+            if variable > maxValues[state.index(variable)]:
+                maxValues[state.index(variable)] = variable
     
     #Normalize all data values
     normalizedStates = list()
     for state in states:
-        normalizedState = {}
-        for key in keys:
-            normalizedState[key] = (state[key]-minValues[key])/(maxValues[key]-minValues[key])
+        normalizedState = list()
+        for variable in state:            
+            normalizedState.append(                                                         \
+                    (variable - minValues[state.index(variable)])                           \
+                    /                                                                       \
+                    (maxValues[state.index(variable)] - minValues[state.index(variable)]))
         normalizedStates.append(normalizedState)
     
-    return normalizedStates, keys
+    return normalizedStates
 
-def seperateTrainTestArrayDictionary(states, trainPercent):
+def seperateTrainTestArrayArray(states, trainPercent):
     #Must be in the range of 0 to 100
     if trainPercent > 100 or trainPercent < 0:
         print('[ERROR] : Training and testing percentage are disproportionate')
@@ -158,104 +185,23 @@ def seperateTrainTestArrayDictionary(states, trainPercent):
     
     return trainStates, testStates
 
-def selectTargetArrayDictionary(states):
-    #Selection is hardcoded for now. It would be better to specify as arguments 
-    # Selected 4 targets (also known as number of outputs chosen) :
-    # - accelCmd
-    # - brakeCmd
-    # - steerCmd
-    # - gearCmd
-    
-    selectedStates = list()
-      
+def separateTargetAndDataArrayArray(states):
+    targetStates = list()
+    dataStates = list()
+    stateLength = len(states[0])
     for state in states:
-        selectedState = {
-                            'accelCmd': state['accelCmd'],
-                            'brakeCmd': state['brakeCmd'], 
-                            'steerCmd': state['steerCmd'], 
-                            'gearCmd': state['gearCmd']
-                        }
-        selectedStates.append(selectedState)
-    return selectedStates
-    
-def selectDataArrayDictionary(states):
-    #Selection is hardcoded for now. It would be better to specify as arguments
-    # Selected 14 data (also known as number of inputs chosen) :
-    # - angle
-    # - distRaced
-    # - gear
-    # - rpm
-    # - speedX
-    # - speedY
-    # - track[0] #First value (at -pi/2)
-    # - track[9] #Middle value (at 0)
-    # - track[18] # Last value (at +pi/2)
-    # - trackPos
-    # - wheelSpinVel[0]
-    # - wheelSpinVel[1]
-    # - wheelSpinVel[2]
-    # - wheelSpinVel[3]
-    
-    selectedStates = list()
-      
-    for state in states:
-        selectedState = {
-                    'angle': state['angle'],
-#                    'curLapTime': state['curLapTime'],
-#                    'damage': state['damage'],
-#                    'distFromStart': state['distFromStart'],
-                    'distRaced': state['distRaced'],
-#                    'fuel': state['fuel'],
-                    'gear': state['gear'],
-                    'rpm': state['rpm'],
-                    'speedX': state['speedX'],
-                    'speedY': state['speedY'],
-                    'track0': state['track0'],
-#                    'track1': state['track1'],
-#                    'track2': state['track2'],
-#                    'track3': state['track3'],
-#                    'track4': state['track4'],
-#                    'track5': state['track5'],
-#                    'track6': state['track6'],
-#                    'track7': state['track7'],
-#                    'track8': state['track8'],
-                    'track9': state['track9'],
-#                    'track10': state['track10'],
-#                    'track11': state['track11'],
-#                    'track12': state['track12'],
-#                    'track13': state['track13'],
-#                    'track14': state['track14'],
-#                    'track15': state['track15'],
-#                    'track16': state['track16'],
-#                    'track17': state['track17'],
-                    'track18': state['track18'],
-                    'trackPos': state['trackPos'], 
-                    'wheelSpinVel0': state['wheelSpinVel0'],
-                    'wheelSpinVel1': state['wheelSpinVel1'],
-                    'wheelSpinVel2': state['wheelSpinVel2'],
-                    'wheelSpinVel3': state['wheelSpinVel3']
-                }
-        selectedStates.append(selectedState)
-    return selectedStates
+        targetStates.append(state[stateLength-5:stateLength-1])
+        dataStates.append(state[0:stateLength-6])
+    return targetStates, dataStates
 
-def arrayDictionaryToArrayArrayFloats(arrayDictionaryStates):
-    arrayArrayStates = list() 
+def arrayArrayToNumpyArrayArrayFloats(states):  
+    numpyArrayArrayStates = np.array(states, dtype=np.float32)
     
-    for arrayDictionaryState in arrayDictionaryStates:
-        arrayArrayStates.append(list(arrayDictionaryState.values()))
-    
-    arrayArrayStates = np.array(arrayArrayStates, dtype=np.float32)
-    
-    return arrayArrayStates
+    return numpyArrayArrayStates
         
-
 #TODO Optional: Could be interesting to filter out noisy data(ones in the extremes), 
 #      to be continued...
 #def filterDataArrayDictionary(states):
-
-#TODO Optional: Could be interesting to shuffle every data, changing the training order, 
-#      to be continued...
-#def shuffleDataArrayDictionary(states):
 
 ###############################################
 # Define code logic here
@@ -263,54 +209,57 @@ def arrayDictionaryToArrayArrayFloats(arrayDictionaryStates):
 
 def main():
     #Load data
-    states = loadEpisodeArrayDictionary('track.pklz')
+    states = loadEpisodesArrayDictionary(EPISODE_PATHS)
     #Selecting and buffering chosen state variables
-    states = selectStatesVariablesArrayDictionary(states)
-    #Normalize all state variables in a range of [0,1]
-    states, keys = normalizeStatesArrayDictionary(states)
+    states = selectStatesVariablesArrayDictionary(states, {**CHOSEN_INPUT_KEYS, **OUTPUT_KEYS})
+
     #Create a portion of states for training (second argument in the range of [0,100]) 
     #and anthoner one for testing
-    trainStates, testStates = seperateTrainTestArrayDictionary(states, 75)
+    trainStates, testStates = seperateTrainTestArrayArray(states, TRAIN_DATASETS_PERCENTAGE)
     
-    #Train sets expected values
-    trainTargetStates = selectTargetArrayDictionary(trainStates)
-    #Train sets input values
-    trainDataStates = selectDataArrayDictionary(trainStates)
+    #Train sets expected and input values
+    trainTargetStates, trainDataStates = separateTargetAndDataArrayArray(trainStates)
     
-    #Test sets expected values
-    testTargetStates = selectTargetArrayDictionary(testStates)
-    #Test sets input values
-    testDataStates = selectDataArrayDictionary(testStates)    
+    #Test sets expected and input values
+    testTargetStates, testDataStates = separateTargetAndDataArrayArray(testStates)  
     
-    #Fitting function accepts array of arrays
-    trainTargetStates = arrayDictionaryToArrayArrayFloats(trainTargetStates)
-    trainDataStates = arrayDictionaryToArrayArrayFloats(trainDataStates)
-    testTargetStates = arrayDictionaryToArrayArrayFloats(testTargetStates)
-    testDataStates = arrayDictionaryToArrayArrayFloats(testDataStates) 
+    print('testTargetStates: %s' % (testTargetStates))
+
+    #Normalize all state variables in a range of [0,1]
+    trainDataStates = normalizeStatesArrayArray(trainDataStates)
+    testDataStates = normalizeStatesArrayArray(testDataStates)
+
+    #Fitting function accepts array of arrays of floats
+    trainTargetStates = arrayArrayToNumpyArrayArrayFloats(trainTargetStates)
+    trainDataStates = arrayArrayToNumpyArrayArrayFloats(trainDataStates)
+    testTargetStates = arrayArrayToNumpyArrayArrayFloats(testTargetStates)
+    testDataStates = arrayArrayToNumpyArrayArrayFloats(testDataStates) 
     
     # Create neural network
     model = Sequential()
-    model.add(Dense(units=10, activation='sigmoid',
-                    input_shape=(14,), name='input_layer'))
-    model.add(Dense(units=5, activation='sigmoid', name='hidden_layer'))
-    model.add(Dense(units=4, activation='sigmoid', name='output_layer'))
+    
+    #Setting up first input layer according to the input_shape
+    if INPUT_DATA_SHAPE == -1:
+        MODEL_LAYERS_CONFIG.insert(0,Dense(units=INPUT_UNITS, activation=INPUT_ACTIVATION, input_shape=(trainDataStates.shape[-1],), name='input_layer'))
+    else:
+        MODEL_LAYERS_CONFIG.insert(0,Dense(units=INPUT_UNITS, activation=INPUT_ACTIVATION, input_shape=(INPUT_DATA_SHAPE,), name='input_layer'))
+    
+    for layer in MODEL_LAYERS_CONFIG:
+        model.add(layer)
     print(model.summary())
 
     # Define training parameters
-    # TODO : Tune the training parameters
-    model.compile(optimizer=SGD(lr=0.1, momentum=0.9),
-                  loss='mse')
+    model.compile(OPTIMIZER, LOSS)
 
     # Perform training
-    # TODO : Tune the maximum number of iterations and desired error
     model.fit(trainDataStates, trainTargetStates, batch_size=len(trainDataStates),
-              epochs=1000, shuffle=True, verbose=1)
+              epochs=EPOCHS, shuffle=SHUFFLE, verbose=VERBOSE)
 
     # Save trained model to disk
-    model.save('nnet.h5')
+    model.save(MODEL_NAME)
 
     # Test model (loading from disk)
-    model = load_model('nnet.h5')
+    model = load_model(MODEL_NAME)
     targetPred = model.predict(testDataStates)
 
     # Print the number of classification errors from the training data
