@@ -23,8 +23,8 @@ logger = logging.getLogger(__name__)
 # Define global variables here
 ###############################################
 ### DATASETS PARAMETERS ###
-TRAIN_DATASETS_PERCENTAGE = 98
-EPISODE_PATHS = ['track.pklz']
+TRAIN_DATASETS_PERCENTAGE = 75
+EPISODE_PATHS = ['track-aalborg.pklz', 'track-alpine-1.pklz']
 
 # Selected input data :
 CHOSEN_INPUT_KEYS = {
@@ -74,7 +74,7 @@ INPUT_DATA_SHAPE = -1
 
 #OTHER LAYERS CONFIG
 MODEL_LAYERS_CONFIG =   [
-                            Dense(units=15, activation='sigmoid', name='hidden_layer'),
+                            Dense(units=10, activation='sigmoid', name='hidden_layer'),
                             Dense(units=4, activation='sigmoid', name='output_layer')
                         ]
 
@@ -91,7 +91,7 @@ VERBOSE = 1
 # Define constant variables here
 ###############################################
 ### DATASETS PARAMETERS ###
-RECORDING_FOLDER_PATH = 'recordings'
+RECORDING_FOLDER_PATH = 'data'
 
 # Output data :
 OUTPUT_KEYS =   {
@@ -148,9 +148,9 @@ def normalizeStatesArrayArray(states):
         for variable in state:
             #Ensuring maximum and minimum value clipping
             if variable <= minValues[state.index(variable)] :
-                normalizedValue = minValues[state.index(variable)]
+                normalizedValue = 0
             elif variable >= maxValues[state.index(variable)]:
-                normalizedValue = maxValues[state.index(variable)]
+                normalizedValue = 1
             else: 
                 normalizedValue =   (variable - minValues[state.index(variable)])                           \
                                     /                                                                       \
@@ -184,8 +184,8 @@ def separateTargetAndDataArrayArray(states):
     dataStates = list()
     stateLength = len(states[0])
     for state in states:
-        targetStates.append(state[stateLength-5:stateLength-1])
-        dataStates.append(state[0:stateLength-6])
+        targetStates.append(state[stateLength-4:])
+        dataStates.append(state[:stateLength-5])
     return targetStates, dataStates
 
 def arrayArrayToNumpyArrayArrayFloats(states):  
@@ -204,7 +204,7 @@ def arrayArrayToNumpyArrayArrayFloats(states):
 def main():
     #Load data
     states = loadEpisodesArrayDictionary(EPISODE_PATHS)
-    #Selecting and buffering chosen state variables
+    #Selecting and buffering chosen state variablesl
     states = selectStatesVariablesArrayDictionary(states, {**CHOSEN_INPUT_KEYS, **OUTPUT_KEYS})
 
     #Create a portion of states for training (second argument in the range of [0,100]) 
@@ -220,6 +220,9 @@ def main():
     #Normalize all state variables in a range of [0,1]
     trainDataStates = normalizeStatesArrayArray(trainDataStates)
     testDataStates = normalizeStatesArrayArray(testDataStates)
+    
+    trainTargetStates = normalizeStatesArrayArray(trainTargetStates)
+    testTargetStates = normalizeStatesArrayArray(testTargetStates)
 
     #Fitting function accepts array of arrays of floats
     trainTargetStates = arrayArrayToNumpyArrayArrayFloats(trainTargetStates)
