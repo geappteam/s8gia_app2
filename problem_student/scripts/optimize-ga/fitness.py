@@ -16,7 +16,7 @@ class FitnessEvaluator:
     def performance(
             self,
             genome,
-            tries = 3,
+            tries = 1,
             genome_format = gc.default_gene_format):
         distance, _ = self._simulate(genome, tries, genome_format)
         return distance
@@ -25,7 +25,7 @@ class FitnessEvaluator:
     def economic(
             self,
             genome,
-            tries = 3,
+            tries = 1,
             genome_format = gc.default_gene_format):
         distance, fuel = self._simulate(genome, tries, genome_format)
         return distance / fuel
@@ -34,7 +34,7 @@ class FitnessEvaluator:
     def _simulate(
             self,
             genome,
-            tries = 3,
+            tries = 1,
             genome_format = gc.default_gene_format):
 
         assert tries > 0

@@ -1,12 +1,12 @@
 import random
 import numpy as np
+
+
 # A genetic algorithm run class
-
-
 class GeneticRun:
-    def __init__(chromosone_size, population_size):
+    def __init__(self, chromosone_size, population_size):
         self.chromosone_size = chromosone_size
-        self.population_size = crossover_p
+        self.population_size = population_size
 
         # Filling initial population
         self.population = []
@@ -19,15 +19,16 @@ class GeneticRun:
 
 
     @property
-    def generation(self)
+    def generation(self):
         return len(self.record)
+
 
     # Advance the population by one generation
     def evolve(self, fitness_function, crossover_p, mutation_p):
 
         # Computing the fitness of every population member
         fit_v = np.zeros(self.population_size)
-        fitness_wheel = fit_v
+        fitness_wheel = fit_v.copy()
         fitness_sum = 0
         fittest_index = 0
 
@@ -59,6 +60,7 @@ class GeneticRun:
 
 
         # Replace population with the next one
+        self.population = new_population
 
 
 
@@ -67,7 +69,7 @@ def roulette_select_pair(selection_wheel):
     selection = [0, 0]
     for i in range(2):
         needle = random.random() * selection_wheel[-1]
-        while needle < selection_wheel[selection[i]]:
+        while needle > selection_wheel[selection[i]]:
             selection[i] += 1
     return selection[0], selection[1]
 
@@ -81,7 +83,7 @@ def crossover(ch1, ch2, p):
 
 
 # Mutation operator
-def mutation(ch, p)
+def mutation(ch, p):
     if random.random() < p:
         gene_index = random.randint(0, len(ch) - 1)
         if ch[gene_index] == '0':
