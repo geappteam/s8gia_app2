@@ -34,10 +34,10 @@ def optimisation(N = 80, G = 100, p_c = 0.7, p_m = 0.001, log = False, gui = Fal
     # Evolution loop
     while perf_run.generation < G:
         perf_run.evolve(fit_eval.performance, p_c, p_m)
-        if log:
-            print(f'Generation: {perf_run.generation}')
-            print(f'Average fitness: {perf_run.record[-1]["avg_fitness"]}')
-            print(f'Max fitness: {perf_run.record[-1]["max_fitness"]}\n')
+#        if log:
+#            print(f'Generation: {perf_run.generation}')
+#            print(f'Average fitness: {perf_run.record[-1]["avg_fitness"]}')
+#            print(f'Max fitness: {perf_run.record[-1]["max_fitness"]}\n')
         if gui:
             p_graph.update(perf_run.record)
 
