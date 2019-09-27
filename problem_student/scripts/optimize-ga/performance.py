@@ -8,7 +8,7 @@ import performance_graph as p_graph
 
 
 
-def optimisation(N = 100, G = 100, p_c = 0.7, p_m = 0.001, log = False, gui = False):
+def optimisation(N = 50, G = 100, p_c = 0.7, p_m = 0.001, log = False, gui = False):
 
     fit_eval = FitnessEvaluator()
 
