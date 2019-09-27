@@ -4,7 +4,7 @@ from fitness import FitnessEvaluator
 from genetic_algorithm import GeneticRun
 import gene_codec as gc
 import pprint as pp
-from performance_graph import PerfGraph
+import performance_graph as p_graph
 
 
 
@@ -22,8 +22,7 @@ def optimisation(N = 100, G = 100, p_c = 0.7, p_m = 0.001, log = False, gui = Fa
         print('Mutation probability:  p_m = ', p_m)
 
     if gui:
-        p_graph = PerfGraph('Performance profile', f'p_c = {p_c}    p_m = {p_m}')
-        p_graph.start()
+        p_graph.init('Performance profile', f'p_c = {p_c}    p_m = {p_m}')
 
 
     # Generates random population
