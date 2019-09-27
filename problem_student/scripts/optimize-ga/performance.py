@@ -8,7 +8,7 @@ import performance_graph as p_graph
 
 
 
-def optimisation(N = 50, G = 100, p_c = 0.7, p_m = 0.001, log = False, gui = False):
+def optimisation(N = 80, G = 100, p_c = 0.7, p_m = 0.001, log = False, gui = False):
 
     fit_eval = FitnessEvaluator()
 
@@ -22,7 +22,7 @@ def optimisation(N = 50, G = 100, p_c = 0.7, p_m = 0.001, log = False, gui = Fal
         print('Mutation probability:  p_m = ', p_m)
 
     if gui:
-        p_graph.init('Performance profile', f'p_c = {p_c}    p_m = {p_m}')
+        p_graph.init('Performance profile', f'p_c = {p_c}   p_m = {p_m}   N = {N}   G = {G}')
 
 
     # Generates random population
