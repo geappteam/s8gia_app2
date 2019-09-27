@@ -13,7 +13,7 @@ def optimisation(N = 100, G = 100, p_c = 0.7, p_m = 0.001, log = False, gui = Fa
     fit_eval = FitnessEvaluator()
 
     if log:
-        print('Performance optimisation')
+        print('Efficiency optimisation')
         print('------------------------')
         print('Genetic algorithm:')
         print('Population:  N = ', N)
@@ -22,7 +22,7 @@ def optimisation(N = 100, G = 100, p_c = 0.7, p_m = 0.001, log = False, gui = Fa
         print('Mutation probability:  p_m = ', p_m)
 
     if gui:
-        p_graph = PerfGraph('Performance profile', f'p_c = {p_c}    p_m = {p_m}')
+        p_graph = PerfGraph('Economic profile', f'p_c = {p_c}    p_m = {p_m}')
         p_graph.start()
 
 
@@ -34,7 +34,7 @@ def optimisation(N = 100, G = 100, p_c = 0.7, p_m = 0.001, log = False, gui = Fa
 
     # Evolution loop
     while perf_run.generation < G:
-        perf_run.evolve(fit_eval.performance, p_c, p_m)
+        perf_run.evolve(fit_eval.economic, p_c, p_m)
         if log:
             print(f'Generation: {perf_run.generation}')
             print(f'Average fitness: {perf_run.record[-1]["avg_fitness"]}')
@@ -45,6 +45,7 @@ def optimisation(N = 100, G = 100, p_c = 0.7, p_m = 0.001, log = False, gui = Fa
     # Present best specimen so far
     best_specimen_ch = max(perf_run.record, key = lambda x: x['max_fitness'])['fittest_specimen']
     best_specimen = gc.decode(best_specimen_ch)
+    distance, fuel, speed = fit_eval.simulate(best_specimen_ch, tries = 10)
     if log:
         print('-------------')
         print('Best specimen')
@@ -52,6 +53,10 @@ def optimisation(N = 100, G = 100, p_c = 0.7, p_m = 0.001, log = False, gui = Fa
         print('Best chromosones:\n', best_specimen_ch)
         print('Best parameters:')
         pp.pprint(best_specimen)
+        print('Specimen performance:')
+        print(' Distance (m):', distance)
+        print(' Fuel use (l):', fuel)
+        print(' Speed (km/h):', speed)
 
     if gui:
         p_graph.join()

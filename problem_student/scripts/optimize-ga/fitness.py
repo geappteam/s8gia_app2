@@ -18,7 +18,7 @@ class FitnessEvaluator:
             genome,
             tries = 1,
             genome_format = gc.default_gene_format):
-        distance, _ = self._simulate(genome, tries, genome_format)
+        distance, _, _ = self.simulate(genome, tries, genome_format)
         return distance
 
     # ratio of the distance traveled over the fuel consumed
@@ -27,11 +27,11 @@ class FitnessEvaluator:
             genome,
             tries = 1,
             genome_format = gc.default_gene_format):
-        distance, fuel = self._simulate(genome, tries, genome_format)
+        distance, fuel, _  = self.simulate(genome, tries, genome_format)
         return distance / fuel
 
     # perform track simulation of the given genome to help evaluate fitness
-    def _simulate(
+    def simulate(
             self,
             genome,
             tries = 1,
@@ -43,11 +43,15 @@ class FitnessEvaluator:
 
         distanceSum = 0
         fuelSum = 0
+        speedSum = 0
         for i in range(tries):
             observation, _, _, _ = self.race_track.step(parameters)
             distanceSum += observation['distRaced'][0]
             fuelSum += observation['fuelUsed'][0]
+            speedSum += observation['topspeed'][0]
         distance = distanceSum / tries
         fuel = fuelSum / tries
+        speed = speedSum / tries
 
-        return distance, fuel
+        return distance, fuel, speed
+
