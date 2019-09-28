@@ -79,9 +79,9 @@ class NNetController(object):
         prediction = self.model.predict(data)
         prediction = self.scalerOut.inverse_transform(prediction)      
         
-        accel = np.clip(prediction[0][0], 0.2, 1.0)     #Clips at [0,1], we want our car always moving so [0.2,1]
-        brake = 0#np.clip(prediction[0][1], 0.0, 1.0)     #Clips at [0,1]
-        gear = np.clip(prediction[0][2], 1.0, 6.0)      #Clips at [-1,6], we want our car always moving so [1,6]
+        accel = np.clip(prediction[0][0], 0.2, 1.0)     #Clips at [0,1]
+        brake = np.clip(prediction[0][1], 0.0, 0.05)     #Clips at [0,1]
+        gear = np.clip(prediction[0][2], 1.0, 6.0)      #Clips at [-1,6]
         steer = np.clip(prediction[0][3], -1.0, 1.0)    #Clips at [0,1]
         
         action = {'accel': np.array([accel], dtype=np.float32),

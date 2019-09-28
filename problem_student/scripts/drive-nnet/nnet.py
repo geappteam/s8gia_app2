@@ -21,42 +21,61 @@ CDIR = os.path.dirname(os.path.realpath(__file__))
 # Define global variables here
 ###############################################
 ### DATASETS PARAMETERS ###
-TRAIN_DATASETS_PERCENTAGE = 75
+TRAIN_DATASETS_PERCENTAGE = 65
 EPISODE_PATHS =     [
                         'track-aalborg.pklz',
-                        'track-alpine-1.pklz'
+                        'track-alpine-1.pklz',
+                        'track-alpine-2.pklz',
+                        'track-brondehach.pklz',
+                        'track-corkscrew.pklz',
+                        'track-e-track-1.pklz',
+                        'track-e-track-2.pklz',
+                        'track-e-track-3.pklz',
+                        'track-e-track-4.pklz',
+                        'track-e-track-6.pklz',
+                        'track-eroad.pklz',
+                        'track-forza.pklz',
+                        'track-g-track-1.pklz',
+                        'track-g-track-2.pklz',
+                        'track-g-track-3.pklz',
+                        'track-ole-road-1.pklz',
+                        'track-ruudskogen.pklz', 
+                        'track-spring.pklz',
+                        'track-street-1.pklz',
+                        'track-wheel-1.pklz',
+                        'track-wheel-2.pklz'
                     ]
 
 # Selected input data :
 CHOSEN_INPUT_KEYS = {
                         'angle': ['angle', 0],
-#                        'curLapTime': ['curLapTime', 0],
-#                        'damage': ['damage', 0],
-#                        'distFromStart': ['distFromStart', 0],
-#                        'distRaced': ['distRaced', 0],
-#                        'fuel': ['fuel', 0],
+                        'curLapTime': ['curLapTime', 0],
+                        'damage': ['damage', 0],
+                        'distFromStart': ['distFromStart', 0],
+                        'distRaced': ['distRaced', 0],
+                        'fuel': ['fuel', 0],
                         'gear': ['gear', 0],
                         'rpm': ['rpm', 0],
                         'speedX': ['speed', 0],
                         'speedY': ['speed', 1],
                         'track0': ['track', 0],
-#                        'track1': ['track', 1],
-#                        'track2': ['track', 2],
-#                        'track3': ['track', 3],
-#                        'track4': ['track', 4],
-#                        'track5': ['track', 5],
-#                        'track6': ['track', 6],
-#                        'track7': ['track', 7],
+                        'track1': ['track', 1],
+                        'track2': ['track', 2],
+                        'track3': ['track', 3],
+                        'track4': ['track', 4],
+                        'track5': ['track', 5],
+                        'track6': ['track', 6],
+                        'track7': ['track', 7],
                         'track8': ['track', 8],
-#                        'track9': ['track', 9],
-#                        'track10': ['track', 10],
-#                        'track11': ['track', 11],
-#                        'track12': ['track', 12],
-#                        'track13': ['track', 13],
-#                        'track14': ['track', 14],
-#                        'track15': ['track', 15],
-#                        'track16': ['track', 16],
-#                        'track17': ['track', 17],
+                        'track9': ['track', 9],
+                        'track10': ['track', 10],
+                        'track11': ['track', 11],
+                        'track12': ['track', 12],
+                        'track13': ['track', 13],
+                        'track14': ['track', 14],
+                        'track15': ['track', 15],
+                        'track16': ['track', 16],
+                        'track17': ['track', 17],
                         'track18': ['track', 18],
                         'trackPos': ['trackPos', 0], 
                         'wheelSpinVel0': ['wheelSpinVel', 0],
@@ -69,22 +88,22 @@ CHOSEN_INPUT_KEYS = {
 MODEL_NAME = 'nnet.h5'
 
 #INPUT LAYER CONFIG
-INPUT_UNITS = 13
+INPUT_UNITS = 15
 INPUT_ACTIVATION = 'sigmoid'
 INPUT_DATA_SHAPE = -1
 
 #OTHER LAYERS CONFIG
 MODEL_LAYERS_CONFIG =   [
-                            Dense(units=10, activation='sigmoid', name='hidden_layer'),
+                            Dense(units=20, activation='relu', name='hidden_layer'),
                             Dense(units=4, activation='sigmoid', name='output_layer')
                         ]
 
 #COMPILATION CONFIG
-OPTIMIZER = SGD(lr=0.3, momentum=0.9)
+OPTIMIZER = SGD(lr=0.8, momentum=0.8)
 LOSS = 'mse'
 
 #FITTING CONFIG
-EPOCHS = 1000
+EPOCHS = 2000
 SHUFFLE = True
 VERBOSE = 1
 
