@@ -21,8 +21,11 @@ CDIR = os.path.dirname(os.path.realpath(__file__))
 # Define global variables here
 ###############################################
 ### DATASETS PARAMETERS ###
-TRAIN_DATASETS_PERCENTAGE = 80
-EPISODE_PATHS = ['track-aalborg.pklz', 'track-alpine-1.pklz']
+TRAIN_DATASETS_PERCENTAGE = 75
+EPISODE_PATHS =     [
+                        'track-aalborg.pklz',
+                        'track-alpine-1.pklz'
+                    ]
 
 # Selected input data :
 CHOSEN_INPUT_KEYS = {
@@ -66,7 +69,7 @@ CHOSEN_INPUT_KEYS = {
 MODEL_NAME = 'nnet.h5'
 
 #INPUT LAYER CONFIG
-INPUT_UNITS = 10
+INPUT_UNITS = 13
 INPUT_ACTIVATION = 'sigmoid'
 INPUT_DATA_SHAPE = -1
 
@@ -193,10 +196,9 @@ def seperateTrainTestArrayArray(states, trainPercent):
 def separateTargetAndDataArrayArray(states):
     targetStates = list()
     dataStates = list()
-    stateLength = len(states[0])
     for state in states:
-        targetStates.append(state[stateLength-4:])
-        dataStates.append(state[:stateLength-5])
+        targetStates.append(state[-4:])
+        dataStates.append(state[:-4])
     return targetStates, dataStates
 
 def arrayArrayToNumpyArrayArrayFloats(states):  

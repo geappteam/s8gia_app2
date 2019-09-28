@@ -74,23 +74,21 @@ class NNetController(object):
         
     def drive(self, state):      
         data = nnet.selectStatesVariablesArrayDictionary([state], nnet.CHOSEN_INPUT_KEYS)
+        
         data = self.scalerIn.transform(data)
-
         prediction = self.model.predict(data)
+        prediction = self.scalerOut.inverse_transform(prediction)      
         
-        print('prediction: %s' % (prediction))
-        
-        prediction = self.scalerOut.inverse_transform(prediction)
-        
-        accel = prediction[0]
-        brake = prediction[1]
-        gear = prediction[2]
-        steer = prediction[3]
+        accel = np.clip(prediction[0][0], 0.2, 1.0)     #Clips at [0,1], we want our car always moving so [0.2,1]
+        brake = 0#np.clip(prediction[0][1], 0.0, 1.0)     #Clips at [0,1]
+        gear = np.clip(prediction[0][2], 1.0, 6.0)      #Clips at [-1,6], we want our car always moving so [1,6]
+        steer = np.clip(prediction[0][3], -1.0, 1.0)    #Clips at [0,1]
         
         action = {'accel': np.array([accel], dtype=np.float32),
                   'brake': np.array([brake], dtype=np.float32),
                   'gear': np.array([gear], dtype=np.int32),
                   'steer': np.array([steer], dtype=np.float32)}
+        
         return action
 
 def main():
