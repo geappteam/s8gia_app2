@@ -73,10 +73,11 @@ def main():
                         recorder.save(observation, action)
                         curNbSteps += 1
 
-                        incr = 0
-                        while(incr < len(observation['track'])):
-                            print('track[%i]: %f' % (incr, observation['track'][incr]))
-                            incr += 1
+                        print('track[8:10]: %s' % (observation['track'][8:11]))
+#                        incr = 0
+#                        while(incr < len(observation['track'])):
+#                            print('track[%i]: %f' % (incr, observation['track'][incr]))
+#                            incr += 1
 
                         if observation and curNbSteps % nbStepsShowStats == 0:
                             curLapTime = observation['curLapTime'][0]

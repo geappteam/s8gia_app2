@@ -98,14 +98,6 @@ class FuzzyController(object):
         speedMH = fuzzy.trimf(x_speed, [125., 187.5, 250.])
         speedH = fuzzy.trimf(x_speed, [187.5, 250., 250.])
 
-#        speedL = fuzzy.trimf(x_speed, [0., 0., 60.])
-#        speedML = fuzzy.trimf(x_speed, [60., 125., 150.])
-#        speedM = fuzzy.trimf(x_speed, [125., 150., 175.])
-#        speedMH = fuzzy.trimf(x_speed, [150., 175., 190.])
-#        speedH = fuzzy.trimf(x_speed, [175., 190., 210.])
-
-#        gearR = fuzzy.trimf(x_gear, [-1, -1, 0])
-#        gearN = fuzzy.trimf(x_gear, [-1, 0, 1])
         gear1 = fuzzy.trimf(x_gear, [0, 1, 2])
         gear2 = fuzzy.trimf(x_gear, [1, 2, 3])
         gear3 = fuzzy.trimf(x_gear, [2, 3, 4])
@@ -327,20 +319,20 @@ class FuzzyController(object):
         # Reading of sensor at +10 degree w.r.t. car axis
 #            rxSensor = state['track'][8]
         # Reading of sensor parallel to car axis
-        cSensor = state['track'][9]
+        cSensor = np.average(state['track'][8:10])
         # Reading of sensor at -5 degree w.r.t. car axis
 #            sxSensor = state['track'][10]
 
         # Universe of discours variables
         x_straightDistance = np.arange(0,101,1)
-        x_speed = np.arange(0,251,1)
-        x_accel = np.arange(0,1.01,0.01)
-        x_brake = np.arange(0,0.011,0.001)
+        x_speed = np.arange(0, 251, 1)
+        x_accel = np.arange(-1., 1, 0.01)
+#        x_brake = np.arange(0, 1.01, 0.01)
 
         # Fuzzy membership functions
-        straightDistanceC = fuzzy.trapmf(x_straightDistance, [0, 0, 20, 40])
-        straightDistanceN = fuzzy.trimf(x_straightDistance, [20, 40, 60])
-        straightDistanceF = fuzzy.trapmf(x_straightDistance, [40, 60, 100, 100])
+        straightDistanceC = fuzzy.trimf(x_straightDistance, [0, 25, 50])
+        straightDistanceN = fuzzy.trimf(x_straightDistance, [50, 75, 100])
+        straightDistanceF = fuzzy.trimf(x_straightDistance, [75, 100, 100])
 
         speedL = fuzzy.trimf(x_speed, [0., 0., 62.5])
         speedML = fuzzy.trimf(x_speed, [0., 62.5, 125.])
@@ -348,25 +340,23 @@ class FuzzyController(object):
         speedMH = fuzzy.trimf(x_speed, [125., 187.5, 250.])
         speedH = fuzzy.trimf(x_speed, [187.5, 250., 250.])
 
-        accelL = fuzzy.trimf(x_accel, [-0.5, 0., 0.50])
-        accelL = np.power(accelL, 4)
-        accelM = fuzzy.trimf(x_accel, [0., 0.50, 1.])
-        accelH = fuzzy.trimf(x_accel, [0.50, 1., 1.5])
-        accelH = np.power(accelH, 4)
+        accelNH = fuzzy.trimf(x_accel, [-1., -1., -0.5])
+        accelNM = fuzzy.trimf(x_accel, [-1., -0.5, 0.])
+        accelNULL = fuzzy.trimf(x_accel, [-0.5, 0., 0.5])
+        accelPM = fuzzy.trimf(x_accel, [0., 0.5, 1.])
+        accelPH = fuzzy.trimf(x_accel, [0.5, 1., 1.])
 
-        brakeL = fuzzy.trapmf(x_brake, [-0.5, -0.25, 0.25, 0.50])
-        brakeL = [x/1000 for x in brakeL]
-        brakeL = np.power(brakeL, 4)
-        brakeM = fuzzy.trimf(x_brake, [0., 0.50, 1.])
-        brakeM = [x/1000 for x in brakeM]
-        brakeH = fuzzy.trapmf(x_brake, [0.50, 0.75, 1.24, 1.5])
-        brakeH = [x/1000 for x in brakeH]
-        brakeH = np.power(brakeH, 4)
+        # "very very" Hedge
+        accelNH = np.power(accelNH, 4)
+        accelNM = np.power(accelNM, 4)
+        accelNULL = np.power(accelNULL, 4)
+        accelPM = np.power(accelPM, 4)
+        accelPH = np.power(accelPH, 4)
 
         # Plotting membership functions
         if(self.printFuzzyLogic == True):
 
-            figMembershipFctAccel, (straightDistanceMF, speedMF, AccelMF, brakeMF) = plt.subplots(nrows = 4, figsize = (10, 10))
+            figMembershipFctAccel, (straightDistanceMF, speedMF, AccelMF) = plt.subplots(nrows = 3, figsize = (10, 10))
 
             straightDistanceMF.plot(x_straightDistance, straightDistanceC, 'b', linewidth = 1.5, label = 'Close')
             straightDistanceMF.plot(x_straightDistance, straightDistanceN, 'g', linewidth = 1.5, label = 'Near')
@@ -382,19 +372,15 @@ class FuzzyController(object):
             speedMF.set_title('Speed')
             speedMF.legend()
 
-            AccelMF.plot(x_accel, accelL, 'b', linewidth = 1.5, label = 'Low')
-            AccelMF.plot(x_accel, accelM, 'g', linewidth = 1.5, label = 'Medium')
-            AccelMF.plot(x_accel, accelH, 'r', linewidth = 1.5, label = 'High')
+            AccelMF.plot(x_accel, accelNH, 'b', linewidth = 1.5, label = 'Low')
+            AccelMF.plot(x_accel, accelNM, 'g', linewidth = 1.5, label = 'Medium')
+            AccelMF.plot(x_accel, accelNULL, 'r', linewidth = 1.5, label = 'High')
+            AccelMF.plot(x_accel, accelPM, 'g', linewidth = 1.5, label = 'Medium')
+            AccelMF.plot(x_accel, accelPH, 'r', linewidth = 1.5, label = 'High')
             AccelMF.set_title('Accel.')
             AccelMF.legend()
 
-            brakeMF.plot(x_brake, brakeL, 'b', linewidth = 1.5, label = 'Low')
-            brakeMF.plot(x_brake, brakeM, 'g', linewidth = 1.5, label = 'Medium')
-            brakeMF.plot(x_brake, brakeH, 'r', linewidth = 1.5, label = 'High')
-            brakeMF.set_title('brake.')
-            brakeMF.legend()
-
-            for fig in (straightDistanceMF, speedMF, AccelMF, brakeMF):
+            for fig in (straightDistanceMF, speedMF, AccelMF):
                 fig.spines['top'].set_visible(False)
                 fig.spines['right'].set_visible(False)
                 fig.get_xaxis().tick_bottom()
@@ -433,66 +419,25 @@ class FuzzyController(object):
         activationRule14 = np.fmin(speedLevelH, straightDistanceLevelN)
         activationRule15 = np.fmin(speedLevelH, straightDistanceLevelF)
 
-        accelActivation1 = np.fmin(activationRule1, accelL)
-        accelActivation2 = np.fmin(activationRule2, accelM)
-        accelActivation3 = np.fmin(activationRule3, accelH)
+        accelActivation1 = np.fmin(activationRule1, accelPM)
+        accelActivation2 = np.fmin(activationRule2, accelPM)
+        accelActivation3 = np.fmin(activationRule3, accelPH)
         
-        accelActivation4 = np.fmin(activationRule4, accelL)
-        accelActivation5 = np.fmin(activationRule5, accelM)
-        accelActivation6 = np.fmin(activationRule6, accelH)
+        accelActivation4 = np.fmin(activationRule4, accelNULL)
+        accelActivation5 = np.fmin(activationRule5, accelPM)
+        accelActivation6 = np.fmin(activationRule6, accelPH)
         
-        accelActivation7 = np.fmin(activationRule7, accelL)
-        accelActivation8 = np.fmin(activationRule8, accelM)
-        accelActivation9 = np.fmin(activationRule9, accelH)
+        accelActivation7 = np.fmin(activationRule7, accelNM)
+        accelActivation8 = np.fmin(activationRule8, accelPM)
+        accelActivation9 = np.fmin(activationRule9, accelPH)
         
-        accelActivation10 = np.fmin(activationRule10, accelL)
-        accelActivation11 = np.fmin(activationRule11, accelM)
-        accelActivation12 = np.fmin(activationRule12, accelH)
+        accelActivation10 = np.fmin(activationRule10, accelNH)
+        accelActivation11 = np.fmin(activationRule11, accelNULL)
+        accelActivation12 = np.fmin(activationRule12, accelPH)
         
-        accelActivation13 = np.fmin(activationRule13, accelL)
-        accelActivation14 = np.fmin(activationRule14, accelM)
-        accelActivation15 = np.fmin(activationRule15, accelH)
-
-        # Rules brake
-        activationRuleBrake1 = np.fmin(speedLevelL, straightDistanceLevelC)
-        activationRuleBrake2 = np.fmin(speedLevelL, straightDistanceLevelN)
-        activationRuleBrake3 = np.fmin(speedLevelL, straightDistanceLevelF)
-        
-        activationRuleBrake4 = np.fmin(speedLevelML, straightDistanceLevelC)
-        activationRuleBrake5 = np.fmin(speedLevelML, straightDistanceLevelN)
-        activationRuleBrake6 = np.fmin(speedLevelML, straightDistanceLevelF)
-        
-        activationRuleBrake7 = np.fmin(speedLevelM, straightDistanceLevelC)
-        activationRuleBrake8 = np.fmin(speedLevelM, straightDistanceLevelN)
-        activationRuleBrake9 = np.fmin(speedLevelM, straightDistanceLevelF)
-        
-        activationRuleBrake10 = np.fmin(speedLevelMH, straightDistanceLevelC)
-        activationRuleBrake11 = np.fmin(speedLevelMH, straightDistanceLevelN)
-        activationRuleBrake12 = np.fmin(speedLevelMH, straightDistanceLevelF)
-        
-        activationRuleBrake13 = np.fmin(speedLevelH, straightDistanceLevelC)
-        activationRuleBrake14 = np.fmin(speedLevelH, straightDistanceLevelN)
-        activationRuleBrake15 = np.fmin(speedLevelH, straightDistanceLevelF)
-
-        brakeActivation1 = np.fmin(activationRuleBrake1, brakeL)
-        brakeActivation2 = np.fmin(activationRuleBrake2, brakeL)
-        brakeActivation3 = np.fmin(activationRuleBrake3, brakeL)
-        
-        brakeActivation4 = np.fmin(activationRuleBrake4, brakeM)
-        brakeActivation5 = np.fmin(activationRuleBrake5, brakeL)
-        brakeActivation6 = np.fmin(activationRuleBrake6, brakeL)
-        
-        brakeActivation7 = np.fmin(activationRuleBrake7, brakeH)
-        brakeActivation8 = np.fmin(activationRuleBrake8, brakeM)
-        brakeActivation9 = np.fmin(activationRuleBrake9, brakeL)
-        
-        brakeActivation10 = np.fmin(activationRuleBrake10, brakeH)
-        brakeActivation11 = np.fmin(activationRuleBrake11, brakeH)
-        brakeActivation12 = np.fmin(activationRuleBrake12, brakeL)
-
-        brakeActivation13 = np.fmin(activationRuleBrake13, brakeH)
-        brakeActivation14 = np.fmin(activationRuleBrake14, brakeH)
-        brakeActivation15 = np.fmin(activationRuleBrake15, brakeL)
+        accelActivation13 = np.fmin(activationRule13, accelNH)
+        accelActivation14 = np.fmin(activationRule14, accelNM)
+        accelActivation15 = np.fmin(activationRule15, accelPH)
 
         aggregationVector = list()
 
@@ -513,36 +458,18 @@ class FuzzyController(object):
         aggregationVector.append(accelActivation15)
 
         aggregation = self._recursiveAggregation(aggregationVector)
-        if(max(aggregation) > 0.0):
+        if(not all(v == 0 for v in aggregation)):
             accel = fuzzy.defuzz(x_accel, aggregation, 'centroid')
         else:
             accel = 0
+
         nextAccelActivation = fuzzy.interp_membership(x_accel, aggregation, accel)
 
-        brakeAggregationVector = list()
-
-        brakeAggregationVector.append(brakeActivation1)
-        brakeAggregationVector.append(brakeActivation2)
-        brakeAggregationVector.append(brakeActivation3)
-        brakeAggregationVector.append(brakeActivation4)
-        brakeAggregationVector.append(brakeActivation5)
-        brakeAggregationVector.append(brakeActivation6)
-        brakeAggregationVector.append(brakeActivation7)
-        brakeAggregationVector.append(brakeActivation8)
-        brakeAggregationVector.append(brakeActivation9)
-        brakeAggregationVector.append(brakeActivation10)
-        brakeAggregationVector.append(brakeActivation11)
-        brakeAggregationVector.append(brakeActivation12)
-        brakeAggregationVector.append(brakeActivation13)
-        brakeAggregationVector.append(brakeActivation14)
-        brakeAggregationVector.append(brakeActivation15)
-
-        aggregationBrake = self._recursiveAggregation(brakeAggregationVector)
-        if(max(aggregationBrake) > 0.0):
-            brake = fuzzy.defuzz(x_brake, aggregationBrake, 'centroid')
+        if(accel<0):
+            brake = np.abs(accel)
+            accel = 0
         else:
             brake = 0
-        nextBrakeActivation = fuzzy.interp_membership(x_brake, aggregationBrake, brake)
 
         if(self.printFuzzyLogic == True):
 
@@ -551,112 +478,63 @@ class FuzzyController(object):
             figAccelActivation, (accelFig) = plt.subplots(figsize=(10, 10))
 
             accelFig.fill_between(x_accel, accel0, accelActivation1, facecolor = 'b', alpha = 0.7)
-            accelFig.plot(x_accel, accelL, 'b',  linewidth = 0.5, linestyle = '--')
+            accelFig.plot(x_accel, accelNULL, 'b',  linewidth = 0.5, linestyle = '--')
             accelFig.fill_between(x_accel, accel0, accelActivation2, facecolor = 'r', alpha = 0.7)
-            accelFig.plot(x_accel, accelM, 'r',  linewidth = 0.5, linestyle = '--')
+            accelFig.plot(x_accel, accelPM, 'r',  linewidth = 0.5, linestyle = '--')
             accelFig.fill_between(x_accel, accel0, accelActivation3, facecolor = 'y', alpha = 0.7)
-            accelFig.plot(x_accel, accelH, 'y',  linewidth = 0.5, linestyle = '--')
+            accelFig.plot(x_accel, accelPH, 'y',  linewidth = 0.5, linestyle = '--')
             accelFig.fill_between(x_accel, accel0, accelActivation4, facecolor = 'g', alpha = 0.7)
-            accelFig.plot(x_accel, accelL, 'g',  linewidth = 0.5, linestyle = '--')
+            accelFig.plot(x_accel, accelNM, 'g',  linewidth = 0.5, linestyle = '--')
             accelFig.fill_between(x_accel, accel0, accelActivation5, facecolor = 'w', alpha = 0.7)
-            accelFig.plot(x_accel, accelM, 'w',  linewidth = 0.5, linestyle = '--')
+            accelFig.plot(x_accel, accelNULL, 'w',  linewidth = 0.5, linestyle = '--')
             accelFig.fill_between(x_accel, accel0, accelActivation6, facecolor = 'k', alpha = 0.7)
-            accelFig.plot(x_accel, accelH, 'k',  linewidth = 0.5, linestyle = '--')
+            accelFig.plot(x_accel, accelPH, 'k',  linewidth = 0.5, linestyle = '--')
             accelFig.fill_between(x_accel, accel0, accelActivation7, facecolor = 'm', alpha = 0.7)
-            accelFig.plot(x_accel, accelL, 'm',  linewidth = 0.5, linestyle = '--')
+            accelFig.plot(x_accel, accelNH, 'm',  linewidth = 0.5, linestyle = '--')
             accelFig.fill_between(x_accel, accel0, accelActivation8, facecolor = 'c', alpha = 0.7)
-            accelFig.plot(x_accel, accelM, 'c',  linewidth = 0.5, linestyle = '--')
+            accelFig.plot(x_accel, accelPM, 'c',  linewidth = 0.5, linestyle = '--')
             accelFig.fill_between(x_accel, accel0, accelActivation9, facecolor = 'w', alpha = 0.7)
-            accelFig.plot(x_accel, accelH, 'w',  linewidth = 0.5, linestyle = '--')
+            accelFig.plot(x_accel, accelPH, 'w',  linewidth = 0.5, linestyle = '--')
             accelFig.fill_between(x_accel, accel0, accelActivation10, facecolor = 'b', alpha = 0.7)
-            accelFig.plot(x_accel, accelL, 'b',  linewidth = 0.5, linestyle = '--')
+            accelFig.plot(x_accel, accelNH, 'b',  linewidth = 0.5, linestyle = '--')
             accelFig.fill_between(x_accel, accel0, accelActivation11, facecolor = 'r', alpha = 0.7)
-            accelFig.plot(x_accel, accelM, 'r',  linewidth = 0.5, linestyle = '--')
+            accelFig.plot(x_accel, accelNULL, 'r',  linewidth = 0.5, linestyle = '--')
             accelFig.fill_between(x_accel, accel0, accelActivation12, facecolor = 'y', alpha = 0.7)
-            accelFig.plot(x_accel, accelH, 'y',  linewidth = 0.5, linestyle = '--')
+            accelFig.plot(x_accel, accelPH, 'y',  linewidth = 0.5, linestyle = '--')
             accelFig.fill_between(x_accel, accel0, accelActivation13, facecolor = 'g', alpha = 0.7)
-            accelFig.plot(x_accel, accelL, 'g',  linewidth = 0.5, linestyle = '--')
+            accelFig.plot(x_accel, accelNH, 'g',  linewidth = 0.5, linestyle = '--')
             accelFig.fill_between(x_accel, accel0, accelActivation14, facecolor = 'r', alpha = 0.7)
-            accelFig.plot(x_accel, accelM, 'r',  linewidth = 0.5, linestyle = '--')
+            accelFig.plot(x_accel, accelNM, 'r',  linewidth = 0.5, linestyle = '--')
             accelFig.fill_between(x_accel, accel0, accelActivation15, facecolor = 'k', alpha = 0.7)
-            accelFig.plot(x_accel, accelH, 'k',  linewidth = 0.5, linestyle = '--')
+            accelFig.plot(x_accel, accelPH, 'k',  linewidth = 0.5, linestyle = '--')
             accelFig.set_title('Accel. membership activation')
-
-            brake0 = np.zeros_like(x_brake)
-
-            figbrakeActivation, (brakeFig) = plt.subplots(figsize=(10, 10))
-
-            brakeFig.fill_between(x_brake, brake0, brakeActivation1, facecolor = 'b', alpha = 0.7)
-            brakeFig.plot(x_brake, brakeL, 'b',  linewidth = 0.5, linestyle = '--')
-            brakeFig.fill_between(x_brake, brake0, brakeActivation2, facecolor = 'r', alpha = 0.7)
-            brakeFig.plot(x_brake, brakeM, 'r',  linewidth = 0.5, linestyle = '--')
-            brakeFig.fill_between(x_brake, brake0, brakeActivation3, facecolor = 'y', alpha = 0.7)
-            brakeFig.plot(x_brake, brakeH, 'y',  linewidth = 0.5, linestyle = '--')
-            brakeFig.fill_between(x_brake, brake0, brakeActivation4, facecolor = 'g', alpha = 0.7)
-            brakeFig.plot(x_brake, brakeL, 'g',  linewidth = 0.5, linestyle = '--')
-            brakeFig.fill_between(x_brake, brake0, brakeActivation5, facecolor = 'w', alpha = 0.7)
-            brakeFig.plot(x_brake, brakeM, 'w',  linewidth = 0.5, linestyle = '--')
-            brakeFig.fill_between(x_brake, brake0, brakeActivation6, facecolor = 'k', alpha = 0.7)
-            brakeFig.plot(x_brake, brakeH, 'k',  linewidth = 0.5, linestyle = '--')
-            brakeFig.fill_between(x_brake, brake0, brakeActivation7, facecolor = 'm', alpha = 0.7)
-            brakeFig.plot(x_brake, brakeL, 'm',  linewidth = 0.5, linestyle = '--')
-            brakeFig.fill_between(x_brake, brake0, brakeActivation8, facecolor = 'c', alpha = 0.7)
-            brakeFig.plot(x_brake, brakeM, 'c',  linewidth = 0.5, linestyle = '--')
-            brakeFig.fill_between(x_brake, brake0, brakeActivation9, facecolor = 'w', alpha = 0.7)
-            brakeFig.plot(x_brake, brakeH, 'w',  linewidth = 0.5, linestyle = '--')
-            brakeFig.fill_between(x_brake, brake0, brakeActivation10, facecolor = 'b', alpha = 0.7)
-            brakeFig.plot(x_brake, brakeL, 'b',  linewidth = 0.5, linestyle = '--')
-            brakeFig.fill_between(x_brake, brake0, brakeActivation11, facecolor = 'r', alpha = 0.7)
-            brakeFig.plot(x_brake, brakeM, 'r',  linewidth = 0.5, linestyle = '--')
-            brakeFig.fill_between(x_brake, brake0, brakeActivation12, facecolor = 'y', alpha = 0.7)
-            brakeFig.plot(x_brake, brakeH, 'y',  linewidth = 0.5, linestyle = '--')
-            brakeFig.fill_between(x_brake, brake0, brakeActivation13, facecolor = 'g', alpha = 0.7)
-            brakeFig.plot(x_brake, brakeL, 'g',  linewidth = 0.5, linestyle = '--')
-            brakeFig.fill_between(x_brake, brake0, brakeActivation14, facecolor = 'r', alpha = 0.7)
-            brakeFig.plot(x_brake, brakeM, 'r',  linewidth = 0.5, linestyle = '--')
-            brakeFig.fill_between(x_brake, brake0, brakeActivation15, facecolor = 'k', alpha = 0.7)
-            brakeFig.plot(x_brake, brakeH, 'k',  linewidth = 0.5, linestyle = '--')
-            brakeFig.set_title('Brake membership activation')
 
             # Accel.
             figActivationAccel, (accelMembershipFig, accelAggregationFig) = plt.subplots(nrows = 2, figsize=(10,10))
 
             accelMembershipFig.fill_between(x_accel, accel0, accelActivation1, facecolor = 'b', alpha = 0.7)
-            accelMembershipFig.plot(x_accel, accelL, 'b', linewidth = 0.5, linestyle = '--')
+            accelMembershipFig.plot(x_accel, accelNH, 'b', linewidth = 0.5, linestyle = '--')
             accelMembershipFig.fill_between(x_accel, accel0, accelActivation2, facecolor = 'r', alpha = 0.7)
-            accelMembershipFig.plot(x_accel, accelM, 'r', linewidth = 0.5, linestyle = '--')
+            accelMembershipFig.plot(x_accel, accelNM, 'r', linewidth = 0.5, linestyle = '--')
             accelMembershipFig.fill_between(x_accel, accel0, accelActivation3, facecolor = 'k', alpha = 0.7)
-            accelMembershipFig.plot(x_accel, accelH, 'k', linewidth = 0.5, linestyle = '--')
+            accelMembershipFig.plot(x_accel, accelNULL, 'k', linewidth = 0.5, linestyle = '--')
+            accelMembershipFig.fill_between(x_accel, accel0, accelActivation2, facecolor = 'r', alpha = 0.7)
+            accelMembershipFig.plot(x_accel, accelPM, 'r', linewidth = 0.5, linestyle = '--')
+            accelMembershipFig.fill_between(x_accel, accel0, accelActivation3, facecolor = 'k', alpha = 0.7)
+            accelMembershipFig.plot(x_accel, accelPH, 'k', linewidth = 0.5, linestyle = '--')
             accelMembershipFig.set_title('Acceleration membership')
 
-            accelAggregationFig.plot(x_accel, accelL, 'b', linewidth = 0.5, linestyle = '--')
-            accelAggregationFig.plot(x_accel, accelM, 'g', linewidth = 0.5, linestyle = '--')
-            accelAggregationFig.plot(x_accel, accelH, 'r', linewidth = 0.5, linestyle = '--')
-
+            accelAggregationFig.plot(x_accel, accelNH, 'b', linewidth = 0.5, linestyle = '--')
+            accelAggregationFig.plot(x_accel, accelNM, 'g', linewidth = 0.5, linestyle = '--')
+            accelAggregationFig.plot(x_accel, accelNULL, 'r', linewidth = 0.5, linestyle = '--')
+            accelAggregationFig.plot(x_accel, accelPM, 'y', linewidth = 0.5, linestyle = '--')
+            accelAggregationFig.plot(x_accel, accelPH, 'k', linewidth = 0.5, linestyle = '--')
+            
             accelAggregationFig.fill_between(x_accel, accel0, aggregation, facecolor = 'Orange', alpha = 0.7)
             accelAggregationFig.plot([accel, accel], [0, nextAccelActivation], 'k', linewidth = 1.5, alpha = 0.9)
             accelAggregationFig.set_title('Aggregated acceleration membership')
 
-            # Brakes
-            figActivationBrake, (brakeMembershipFig, brakeAggregationFig) = plt.subplots(nrows = 2, figsize=(10,10))
-
-            brakeMembershipFig.fill_between(x_brake, brake0, brakeActivation1, facecolor = 'b', alpha = 0.7)
-            brakeMembershipFig.plot(x_brake, brakeL, 'b', linewidth = 0.5, linestyle = '--')
-            brakeMembershipFig.fill_between(x_brake, brake0, brakeActivation2, facecolor = 'r', alpha = 0.7)
-            brakeMembershipFig.plot(x_brake, brakeM, 'r', linewidth = 0.5, linestyle = '--')
-            brakeMembershipFig.fill_between(x_brake, brake0, brakeActivation3, facecolor = 'k', alpha = 0.7)
-            brakeMembershipFig.plot(x_brake, brakeH, 'k', linewidth = 0.5, linestyle = '--')
-            brakeMembershipFig.set_title('brake membership')
-
-            brakeAggregationFig.plot(x_brake, brakeL, 'b', linewidth = 0.5, linestyle = '--')
-            brakeAggregationFig.plot(x_brake, brakeM, 'g', linewidth = 0.5, linestyle = '--')
-            brakeAggregationFig.plot(x_brake, brakeH, 'r', linewidth = 0.5, linestyle = '--')
-
-            brakeAggregationFig.fill_between(x_brake, brake0, aggregationBrake, facecolor = 'Orange', alpha = 0.7)
-            brakeAggregationFig.plot([brake, brake], [0, nextBrakeActivation], 'k', linewidth = 1.5, alpha = 0.9)
-            brakeAggregationFig.set_title('Aggregated brake membership')
-
-            for fig in (accelMembershipFig, accelAggregationFig, accelFig, brakeMembershipFig, brakeAggregationFig):
+            for fig in (accelMembershipFig, accelAggregationFig, accelFig):
                 fig.spines['top'].set_visible(False)
                 fig.spines['right'].set_visible(False)
                 fig.get_xaxis().tick_bottom()

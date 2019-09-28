@@ -66,7 +66,7 @@ incr = 1
 for s in speed:
     for t in Track19:
         accel = 0.5
-        print('accelActivition%i = np.fmin(activationRule%i, accel%s)' %(incr,incr, accel))
+        print('accelActivation%i = np.fmin(activationRule%i, accel%s)' %(incr,incr, accel))
 
         incr += 1
 
