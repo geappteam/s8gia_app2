@@ -72,12 +72,17 @@ def main():
                         observation, action, reward, done, _ = env.step()
                         recorder.save(observation, action)
                         curNbSteps += 1
-    
+
+                        incr = 0
+                        while(incr < len(observation['track'])):
+                            print('track[%i]: %f' % (incr, observation['track'][incr]))
+                            incr += 1
+
                         if observation and curNbSteps % nbStepsShowStats == 0:
                             curLapTime = observation['curLapTime'][0]
                             distRaced = observation['distRaced'][0]
                             logger.info('Current lap time = %4.1f sec (distance raced = %0.1f m)' % (curLapTime, distRaced))
-    
+
                         if done:
                             if reward > 0.0:
                                 logger.info('Episode was successful.')

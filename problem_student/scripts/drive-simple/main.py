@@ -203,7 +203,8 @@ class SimpleController(object):
         brake = np.clip(brake, 0.0, 1.0)
         accel = np.clip(accel, 0.0, 1.0)
 
-        return accel, brake
+#        return accel, brake
+        return 1, 0
 
     def _filterABS(self, state, brake):
 
