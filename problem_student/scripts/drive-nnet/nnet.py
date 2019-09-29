@@ -16,12 +16,29 @@ import os
 sys.path.append('../..')
 from torcs.control.core import EpisodeRecorder
 CDIR = os.path.dirname(os.path.realpath(__file__))
+###############################################
+# Define constant variables here
+###############################################
+### DATASETS PARAMETERS ###
+RECORDING_FOLDER_PATH = 'data'
 
+# Output data :
+OUTPUT_KEYS =   {
+                    'accelCmd': ['accelCmd', 0],
+                    'brakeCmd': ['brakeCmd', 0], 
+                    'steerCmd': ['steerCmd', 0], 
+                    'gearCmd': ['gearCmd', 0]
+                }
+
+MIN_VALUES = list()
+MAX_VALUES = list()
+
+TRAINING_CONFIG_FILE = "training.config"
 ###############################################
 # Define global variables here
 ###############################################
 ### DATASETS PARAMETERS ###
-TRAIN_DATASETS_PERCENTAGE = 65
+TRAIN_DATASETS_PERCENTAGE = 75
 EPISODE_PATHS =     [
                         'track-aalborg.pklz',
                         'track-alpine-1.pklz',
@@ -49,33 +66,33 @@ EPISODE_PATHS =     [
 # Selected input data :
 CHOSEN_INPUT_KEYS = {
                         'angle': ['angle', 0],
-                        'curLapTime': ['curLapTime', 0],
-                        'damage': ['damage', 0],
-                        'distFromStart': ['distFromStart', 0],
-                        'distRaced': ['distRaced', 0],
-                        'fuel': ['fuel', 0],
+#                        'curLapTime': ['curLapTime', 0],
+#                        'damage': ['damage', 0],
+#                        'distFromStart': ['distFromStart', 0],
+#                        'distRaced': ['distRaced', 0],
+#                        'fuel': ['fuel', 0],
                         'gear': ['gear', 0],
                         'rpm': ['rpm', 0],
                         'speedX': ['speed', 0],
                         'speedY': ['speed', 1],
                         'track0': ['track', 0],
-                        'track1': ['track', 1],
-                        'track2': ['track', 2],
-                        'track3': ['track', 3],
-                        'track4': ['track', 4],
-                        'track5': ['track', 5],
-                        'track6': ['track', 6],
-                        'track7': ['track', 7],
-                        'track8': ['track', 8],
-                        'track9': ['track', 9],
-                        'track10': ['track', 10],
-                        'track11': ['track', 11],
-                        'track12': ['track', 12],
-                        'track13': ['track', 13],
-                        'track14': ['track', 14],
-                        'track15': ['track', 15],
-                        'track16': ['track', 16],
-                        'track17': ['track', 17],
+#                        'track1': ['track', 1],
+#                        'track2': ['track', 2],
+#                        'track3': ['track', 3],
+#                        'track4': ['track', 4],
+#                        'track5': ['track', 5],
+#                        'track6': ['track', 6],
+#                        'track7': ['track', 7],
+#                        'track8': ['track', 8],
+#                        'track9': ['track', 9],
+#                        'track10': ['track', 10],
+#                        'track11': ['track', 11],
+#                        'track12': ['track', 12],
+#                        'track13': ['track', 13],
+#                        'track14': ['track', 14],
+#                        'track15': ['track', 15],
+#                        'track16': ['track', 16],
+#                        'track17': ['track', 17],
                         'track18': ['track', 18],
                         'trackPos': ['trackPos', 0], 
                         'wheelSpinVel0': ['wheelSpinVel', 0],
@@ -88,18 +105,18 @@ CHOSEN_INPUT_KEYS = {
 MODEL_NAME = 'nnet.h5'
 
 #INPUT LAYER CONFIG
-INPUT_UNITS = 15
-INPUT_ACTIVATION = 'sigmoid'
+INPUT_UNITS = 10
+INPUT_ACTIVATION = 'tanh'
 INPUT_DATA_SHAPE = -1
 
 #OTHER LAYERS CONFIG
 MODEL_LAYERS_CONFIG =   [
-                            Dense(units=20, activation='relu', name='hidden_layer'),
-                            Dense(units=4, activation='sigmoid', name='output_layer')
+                            Dense(units=15, activation='tanh', name='hidden_layer'),
+                            Dense(units=len(OUTPUT_KEYS), activation='tanh', name='output_layer')
                         ]
 
 #COMPILATION CONFIG
-OPTIMIZER = SGD(lr=0.8, momentum=0.8)
+OPTIMIZER = SGD(lr=0.5, momentum=0.8)
 LOSS = 'mse'
 
 #FITTING CONFIG
@@ -107,25 +124,8 @@ EPOCHS = 2000
 SHUFFLE = True
 VERBOSE = 1
 
-###############################################
-# Define constant variables here
-###############################################
-### DATASETS PARAMETERS ###
-RECORDING_FOLDER_PATH = 'data'
-
-# Output data :
-OUTPUT_KEYS =   {
-                    'accelCmd': ['accelCmd', 0],
-                    'brakeCmd': ['brakeCmd', 0], 
-                    'steerCmd': ['steerCmd', 0], 
-                    'gearCmd': ['gearCmd', 0]
-                }
-
-MIN_VALUES = list()
-MAX_VALUES = list()
-
-TRAINING_CONFIG_FILE = "training.config"
-
+#IGNORING A PERCENTAGE OF FIRSTS/LASTS DATA
+IGNORING_PERCENTAGE = 0.10
 ###############################################
 # Define helper functions here
 ###############################################
@@ -138,7 +138,7 @@ def loadEpisodesArrayDictionary(episodesPaths):
     concatenedStates = list()
     for episodePath in episodesPaths :
         states = loadEpisodeArrayDictionary(episodePath)
-        concatenedStates = concatenedStates + states
+        concatenedStates = concatenedStates + states[int(len(states)*IGNORING_PERCENTAGE):(len(states)-int(len(states)*IGNORING_PERCENTAGE))]
     return concatenedStates
 
 def selectStatesVariablesArrayDictionary(states, selectedVariablesKeysIndexes):
@@ -216,8 +216,8 @@ def separateTargetAndDataArrayArray(states):
     targetStates = list()
     dataStates = list()
     for state in states:
-        targetStates.append(state[-4:])
-        dataStates.append(state[:-4])
+        targetStates.append(state[-len(OUTPUT_KEYS):])
+        dataStates.append(state[:-len(OUTPUT_KEYS)])
     return targetStates, dataStates
 
 def arrayArrayToNumpyArrayArrayFloats(states):  
@@ -239,6 +239,10 @@ def main():
     #Selecting and buffering chosen state variablesl
     states = selectStatesVariablesArrayDictionary(states, {**CHOSEN_INPUT_KEYS, **OUTPUT_KEYS})
 
+    #Shuffle all data
+    np.random.seed(0)
+    np.random.shuffle(states)
+
     #Create a portion of states for training (second argument in the range of [0,100]) 
     #and anthoner one for testing
     trainStates, testStates = seperateTrainTestArrayArray(states, TRAIN_DATASETS_PERCENTAGE)
@@ -254,11 +258,11 @@ def main():
     MIN_VALUES, MAX_VALUES = getMinMaxValuesStatesArrayArray(states)
 
     #Normalize all state variables in a range of [0,1]
-    trainDataStates = normalizeStatesArrayArray(trainDataStates, MIN_VALUES[:-4], MAX_VALUES[:-4])
-    testDataStates = normalizeStatesArrayArray(testDataStates, MIN_VALUES[:-4], MAX_VALUES[:-4])
+    trainDataStates = normalizeStatesArrayArray(trainDataStates, MIN_VALUES[:-len(OUTPUT_KEYS)], MAX_VALUES[:-len(OUTPUT_KEYS)])
+    testDataStates = normalizeStatesArrayArray(testDataStates, MIN_VALUES[:-len(OUTPUT_KEYS)], MAX_VALUES[:-len(OUTPUT_KEYS)])
     
-    trainTargetStates = normalizeStatesArrayArray(trainTargetStates, MIN_VALUES[-4:], MAX_VALUES[-4:])
-    testTargetStates = normalizeStatesArrayArray(testTargetStates, MIN_VALUES[-4:], MAX_VALUES[-4:])
+    trainTargetStates = normalizeStatesArrayArray(trainTargetStates, MIN_VALUES[-len(OUTPUT_KEYS):], MAX_VALUES[-len(OUTPUT_KEYS):])
+    testTargetStates = normalizeStatesArrayArray(testTargetStates, MIN_VALUES[-len(OUTPUT_KEYS):], MAX_VALUES[-len(OUTPUT_KEYS):])
 
     #Fitting function accepts numpy array of arrays of floats
     trainTargetStates = arrayArrayToNumpyArrayArrayFloats(trainTargetStates)

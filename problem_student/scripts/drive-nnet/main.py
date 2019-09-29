@@ -67,22 +67,43 @@ class NNetController(object):
         MAX_VALUES = [float(element) for element in minMaxValuesStr[1].rstrip("").split(" ")]
         
         self.scalerIn = MinMaxScaler()
-        self.scalerIn.fit([MIN_VALUES[:-4],MAX_VALUES[:-4]])
+        self.scalerIn.fit([MIN_VALUES[:-len(nnet.OUTPUT_KEYS)],MAX_VALUES[:-len(nnet.OUTPUT_KEYS)]])
 
         self.scalerOut = MinMaxScaler()
-        self.scalerOut.fit([MAX_VALUES[-4:],MAX_VALUES[-4:]])
+        self.scalerOut.fit([MIN_VALUES[-len(nnet.OUTPUT_KEYS):],MAX_VALUES[-len(nnet.OUTPUT_KEYS):]])
         
+    def scale(self, data, minValue, maxValue):
+        scaled = list()
+        i = 0
+        for x in data:
+            scaled.append((x - minValue[i]) / (maxValue[i] - minValue[i]))
+            i = i + 1
+        return scaled
+    
+    def unscale(self, data, minValue, maxValue):       
+        unscaled = list()
+        i = 0
+        for x in data:
+            unscaled.append((x * (maxValue[i] - minValue[i])) + minValue[i])
+            i = i + 1
+        return unscaled
+            
+    
     def drive(self, state):      
         data = nnet.selectStatesVariablesArrayDictionary([state], nnet.CHOSEN_INPUT_KEYS)
         
         data = self.scalerIn.transform(data)
+#        self.scale(data, MIN_VALUES[:-len(nnet.OUTPUT_KEYS)],MAX_VALUES[:-len(nnet.OUTPUT_KEYS)])
         prediction = self.model.predict(data)
+#        self.unscale(prediction, MIN_VALUES[-len(nnet.OUTPUT_KEYS):],MAX_VALUES[-len(nnet.OUTPUT_KEYS):])
         prediction = self.scalerOut.inverse_transform(prediction)      
         
-        accel = np.clip(prediction[0][0], 0.2, 1.0)     #Clips at [0,1]
-        brake = np.clip(prediction[0][1], 0.0, 0.05)     #Clips at [0,1]
+        
+        
+        accel = np.clip(prediction[0][0], 0.8, 1.0)     #Clips at [0,1]
+        brake = np.clip(prediction[0][1], 0.0, 0.1)     #Clips at [0,1]
         gear = np.clip(prediction[0][2], 1.0, 6.0)      #Clips at [-1,6]
-        steer = np.clip(prediction[0][3], -1.0, 1.0)    #Clips at [0,1]
+        steer = np.clip(prediction[0][3], -1.0, 1.0)    #Clips at [-1,1]
         
         action = {'accel': np.array([accel], dtype=np.float32),
                   'brake': np.array([brake], dtype=np.float32),
