@@ -71,6 +71,34 @@ for s in speed:
         incr += 1
 
 #%%
+incr = 1
+
+angle = ['L', 'C', 'R']
+speed = ['L', 'M', 'H']
+TrackPos = ['L', 'C', 'R'] # Close, Medium Close, Medium Near, Near, Far, Very Far
+
+        # If speed levl is Low and rpm level is high, then gear is 1 translates to:
+#        activationRule1 = np.fmin(speedLevelL, rpmLevelH)
+#        gearActivation1 = np.fmin(activationRule1, gear1)
+
+for s in speed:
+    for t in TrackPos:
+        for a in angle:
+            accel = 0.5
+            print('activationRule%i = np.fmin(speedLevel%s, positionLevel%s, angleLevel%s)' %(incr, s, t, a))
+            incr += 1
+
+print('\r\n')
+
+incr = 1
+for s in speed:
+    for t in TrackPos:
+        for a in angle:
+            steer = 0.5
+            print('accelActivation%i = np.fmin(activationRule%i, steering%s)' %(incr,incr, steer))
+            incr += 1
+
+#%%
 def recursiveTryOut(vector):
     if(len(vector)==2):
         return vector[0] * vector[1]
