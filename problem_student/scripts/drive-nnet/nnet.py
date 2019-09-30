@@ -83,9 +83,9 @@ CHOSEN_INPUT_KEYS = {
 #                        'track5': ['track', 5],
 #                        'track6': ['track', 6],
 #                        'track7': ['track', 7],
-#                        'track8': ['track', 8],
+                        'track8': ['track', 8],
 #                        'track9': ['track', 9],
-#                        'track10': ['track', 10],
+                        'track10': ['track', 10],
 #                        'track11': ['track', 11],
 #                        'track12': ['track', 12],
 #                        'track13': ['track', 13],
@@ -120,7 +120,7 @@ OPTIMIZER = SGD(lr=0.5, momentum=0.8)
 LOSS = 'mse'
 
 #FITTING CONFIG
-EPOCHS = 2000
+EPOCHS = 1000
 SHUFFLE = True
 VERBOSE = 1
 

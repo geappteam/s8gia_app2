@@ -100,10 +100,10 @@ class NNetController(object):
         
         
         
-        accel = np.clip(prediction[0][0], 0.8, 1.0)     #Clips at [0,1]
-        brake = np.clip(prediction[0][1], 0.0, 0.1)     #Clips at [0,1]
+        accel = np.clip(prediction[0][0], 0.0, 1.0)     #Clips at [0,1]
+        brake = np.clip(prediction[0][1], 0.0, 0.5)     #Clips at [0,1]
         gear = np.clip(prediction[0][2], 1.0, 6.0)      #Clips at [-1,6]
-        steer = np.clip(prediction[0][3], -1.0, 1.0)    #Clips at [-1,1]
+        steer = np.clip(prediction[0][3], -0.8, 0.8)    #Clips at [-1,1]
         
         action = {'accel': np.array([accel], dtype=np.float32),
                   'brake': np.array([brake], dtype=np.float32),
