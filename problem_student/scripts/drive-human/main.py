@@ -75,6 +75,7 @@ def main():
 
 #                        print('track[8:10]: %s' % (observation['track'][8:11]))
                         print('angle: %s' % (observation['angle']))
+                        print('Pos: %s' % (observation['trackPos']))
 
                         if observation and curNbSteps % nbStepsShowStats == 0:
                             curLapTime = observation['curLapTime'][0]
