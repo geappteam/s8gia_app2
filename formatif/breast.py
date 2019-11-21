@@ -78,44 +78,49 @@ def main():
     plt.show()
 
     # TODO: Create training and validation datasets
-    train_data = data
-    train_target = target
-    test_data = data
-    test_target = target
+    testRelativeSize = 0.25
+    trainMaxIndex = data.size - round(testRelativeSize*data.size) - 1
+    
+    print(target)
+    
+#    train_data = data[:trainMaxIndex]
+#    train_target = target[:]
+#    test_data = data[:]
+#    test_target = target[:]
 
-    # TODO : Apply any relevant transformation to the data
-    # (e.g. filtering, normalization, dimensionality reduction)
-
-    # Create neural network
-    # TODO : Tune the number and size of hidden layers
-    model = Sequential()
-    model.add(Dense(units=1, activation='sigmoid',
-                    input_shape=(data.shape[-1],)))
-    model.add(Dense(units=target.shape[-1], activation='linear'))
-    print(model.summary())
-
-    # Define training parameters
-    # TODO : Tune the training parameters
-    model.compile(optimizer=SGD(lr=1.0, momentum=0.1),
-                  loss='mse')
-
-    # Perform training
-    # TODO : Tune the maximum number of iterations and desired error
-    model.fit(train_data, train_target, batch_size=len(data),
-              epochs=100, shuffle=True, verbose=1)
-
-    # Print the number of classification errors from the training data
-    targetPred = model.predict(train_data)
-    nbErrors = np.sum(np.argmax(targetPred, axis=-1) != np.argmax(train_target, axis=-1))
-    accuracy = (len(train_data) - nbErrors) / len(train_data)
-    print('Classification accuracy (training set): %0.3f' % (accuracy))
-
-    # Print the number of classification errors from the test data
-    targetPred = model.predict(test_data)
-    nbErrors = np.sum(np.argmax(targetPred, axis=-1) != np.argmax(test_target, axis=-1))
-    accuracy = (len(test_data) - nbErrors) / len(test_data)
-    print('Classification accuracy (test set): %0.3f' % (accuracy))
-
-
+#    # TODO : Apply any relevant transformation to the data
+#    # (e.g. filtering, normalization, dimensionality reduction)
+#
+#    # Create neural network
+#    # TODO : Tune the number and size of hidden layers
+#    model = Sequential()
+#    model.add(Dense(units=1, activation='sigmoid',
+#                    input_shape=(data.shape[-1],)))
+#    model.add(Dense(units=target.shape[-1], activation='linear'))
+#    print(model.summary())
+#
+#    # Define training parameters
+#    # TODO : Tune the training parameters
+#    model.compile(optimizer=SGD(lr=1.0, momentum=0.1),
+#                  loss='mse')
+#
+#    # Perform training
+#    # TODO : Tune the maximum number of iterations and desired error
+#    model.fit(train_data, train_target, batch_size=len(data),
+#              epochs=100, shuffle=True, verbose=1)
+#
+#    # Print the number of classification errors from the training data
+#    targetPred = model.predict(train_data)
+#    nbErrors = np.sum(np.argmax(targetPred, axis=-1) != np.argmax(train_target, axis=-1))
+#    accuracy = (len(train_data) - nbErrors) / len(train_data)
+#    print('Classification accuracy (training set): %0.3f' % (accuracy))
+#
+#    # Print the number of classification errors from the test data
+#    targetPred = model.predict(test_data)
+#    nbErrors = np.sum(np.argmax(targetPred, axis=-1) != np.argmax(test_target, axis=-1))
+#    accuracy = (len(test_data) - nbErrors) / len(test_data)
+#    print('Classification accuracy (test set): %0.3f' % (accuracy))
+#
+#
 if __name__ == "__main__":
     main()
