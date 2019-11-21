@@ -79,26 +79,29 @@ def main():
 
     # TODO: Create training and validation datasets
     testRelativeSize = 0.25
-    trainMaxIndex = data.size - round(testRelativeSize*data.size) - 1
+    trainDatasetMaxIndex = len(data) - round(testRelativeSize*len(data)) - 1
     
-    print(target)
-    
-#    train_data = data[:trainMaxIndex]
-#    train_target = target[:]
-#    test_data = data[:]
-#    test_target = target[:]
+    train_data = data[:trainDatasetMaxIndex]
+    train_target = target[:trainDatasetMaxIndex]
+    test_data = data[trainDatasetMaxIndex:]
+    test_target = target[trainDatasetMaxIndex:]
 
-#    # TODO : Apply any relevant transformation to the data
-#    # (e.g. filtering, normalization, dimensionality reduction)
-#
-#    # Create neural network
-#    # TODO : Tune the number and size of hidden layers
-#    model = Sequential()
-#    model.add(Dense(units=1, activation='sigmoid',
-#                    input_shape=(data.shape[-1],)))
-#    model.add(Dense(units=target.shape[-1], activation='linear'))
-#    print(model.summary())
-#
+    # TODO : Apply any relevant transformation to the data
+    # (e.g. filtering, normalization, dimensionality reduction)
+    
+    #Normalization
+    maxValuesDataset = np.amax(data,axis=0)
+    train_data = train_data/maxValuesDataset
+    test_data = test_data/maxValuesDataset
+
+    # Create neural network
+    # TODO : Tune the number and size of hidden layers
+    model = Sequential()
+    model.add(Dense(units=5, activation='sigmoid',
+                    input_shape=(data.shape[-1],)))
+    model.add(Dense(units=target.shape[-1], activation='linear'))
+    print(model.summary())
+
 #    # Define training parameters
 #    # TODO : Tune the training parameters
 #    model.compile(optimizer=SGD(lr=1.0, momentum=0.1),
@@ -120,7 +123,7 @@ def main():
 #    nbErrors = np.sum(np.argmax(targetPred, axis=-1) != np.argmax(test_target, axis=-1))
 #    accuracy = (len(test_data) - nbErrors) / len(test_data)
 #    print('Classification accuracy (test set): %0.3f' % (accuracy))
-#
-#
+
+
 if __name__ == "__main__":
     main()
