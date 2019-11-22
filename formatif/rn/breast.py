@@ -107,12 +107,12 @@ def main():
     # TODO : Tune the training parameters
 #    model.compile(optimizer=SGD(lr=1.0, momentum=0.1),
 #                  loss='mse')
-    model.compile(optimizer=SGD(lr=0.3, momentum=0.3),
+    model.compile(optimizer=SGD(lr=0.2, momentum=0.3),
                   loss='mse')
 
     # Perform training
     # TODO : Tune the maximum number of iterations and desired error
-    iterations = 9 
+    iterations = 10 
     history = model.fit(train_data, train_target, batch_size=round(len(data)/iterations),
               epochs=1000, shuffle=True, verbose=1)
     
