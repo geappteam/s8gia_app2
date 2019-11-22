@@ -63,46 +63,65 @@ def main():
     # The diagnosis of breast tissues (benign, malignant) where malignant denotes that the disease is harmful
     target = np.eye(2, 2)[np.array(S[:, -1], dtype=np.int)]
 
-    # Show the data
-    colors = np.array([[1.0, 0.0, 0.0],   # Red
-                       [0.0, 0.0, 1.0]])  # Blue
-    c = colors[np.argmax(target, axis=-1)]
-
-    fig = plt.figure(figsize=(8, 8))
-    ax = fig.add_subplot(111, projection='3d')
-    ax.scatter(data[:, 0], data[:, 1], data[:, 2], s=10.0, c=c, marker='x')
-    ax.set_title('Breast cancer dataset')
-    ax.set_xlabel('mean texture')
-    ax.set_ylabel('mean area')
-    ax.set_zlabel('mean smoothness')
-    plt.show()
+#    # Show the data
+#    colors = np.array([[1.0, 0.0, 0.0],   # Red
+#                       [0.0, 0.0, 1.0]])  # Blue
+#    c = colors[np.argmax(target, axis=-1)]
+#
+#    fig = plt.figure(figsize=(8, 8))
+#    ax = fig.add_subplot(111, projection='3d')
+#    ax.scatter(data[:, 0], data[:, 1], data[:, 2], s=10.0, c=c, marker='x')
+#    ax.set_title('Breast cancer dataset')
+#    ax.set_xlabel('mean texture')
+#    ax.set_ylabel('mean area')
+#    ax.set_zlabel('mean smoothness')
+#    plt.show()
 
     # TODO: Create training and validation datasets
-    train_data = data
-    train_target = target
-    test_data = data
-    test_target = target
-
+    testRelativeSize = 0.25
+    trainDatasetMaxIndex = len(data) - round(testRelativeSize*len(data)) - 1
+    
+    train_data = data[:trainDatasetMaxIndex]
+    train_target = target[:trainDatasetMaxIndex]
+    test_data = data[trainDatasetMaxIndex:]
+    test_target = target[trainDatasetMaxIndex:]
+    
     # TODO : Apply any relevant transformation to the data
     # (e.g. filtering, normalization, dimensionality reduction)
+    
+    #Normalization
+    maxValuesDataset = np.amax(data,axis=0)
+    train_data = train_data/maxValuesDataset
+    test_data = test_data/maxValuesDataset
 
     # Create neural network
     # TODO : Tune the number and size of hidden layers
     model = Sequential()
-    model.add(Dense(units=1, activation='sigmoid',
+    model.add(Dense(units=5, activation='sigmoid',
                     input_shape=(data.shape[-1],)))
-    model.add(Dense(units=target.shape[-1], activation='linear'))
+    model.add(Dense(units=5, activation='sigmoid'))
+    model.add(Dense(units=target.shape[-1], activation='sigmoid'))
     print(model.summary())
 
     # Define training parameters
     # TODO : Tune the training parameters
-    model.compile(optimizer=SGD(lr=1.0, momentum=0.1),
+#    model.compile(optimizer=SGD(lr=1.0, momentum=0.1),
+#                  loss='mse')
+    model.compile(optimizer=SGD(lr=0.2, momentum=0.3),
                   loss='mse')
 
     # Perform training
     # TODO : Tune the maximum number of iterations and desired error
-    model.fit(train_data, train_target, batch_size=len(data),
-              epochs=100, shuffle=True, verbose=1)
+    iterations = 10 
+    history = model.fit(train_data, train_target, batch_size=round(len(data)/iterations),
+              epochs=1000, shuffle=True, verbose=1)
+    
+    plt.plot(history.history['loss'])
+    plt.title('Model loss')
+    plt.ylabel('Loss')
+    plt.xlabel('Epoch')
+    plt.legend(['Train'], loc='upper left')
+    plt.show()
 
     # Print the number of classification errors from the training data
     targetPred = model.predict(train_data)

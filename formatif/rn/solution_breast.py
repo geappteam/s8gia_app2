@@ -30,7 +30,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from keras.models import Sequential
+from keras.models import Sequential, load_model
 from keras.layers import Dense
 from keras.optimizers import SGD
 from mpl_toolkits.mplot3d import Axes3D
@@ -38,6 +38,43 @@ from mpl_toolkits.mplot3d import Axes3D
 ###############################################
 # Define helper functions here
 ###############################################
+
+
+# usage: OUT = scale_data(IN, MINMAX)
+#
+# Scale an input vector or matrix so that the values
+# are normalized in the range [-1, 1].
+#
+# Input:
+# - IN, the input vector or matrix.
+# - MINMAX, override the range of IN.
+#
+# Output:
+# - OUT, the scaled input vector or matrix.
+# - MINMAX, the original range of IN, used later as scaling parameters.
+#
+def scaleData(x, minmax=None):
+    if minmax is None:
+        minmax = (np.min(x), np.max(x))
+    y = 2.0 * (x - np.min(x)) / (np.max(x) - np.min(x)) - 1
+    return y, minmax
+
+
+# usage: OUT = descale_data(IN, MINMAX)
+#
+# Descale an input vector or matrix so that the values
+# are denormalized from the range [-1, 1].
+#
+# Input:
+# - IN, the input vector or matrix.
+# - MINMAX, the original range of IN.
+#
+# Output:
+# - OUT, the descaled input vector or matrix.
+#
+def descaleData(x, minmax):
+    y = ((x + 1.0) / 2) * (minmax[1] - minmax[0]) + minmax[0]
+    return y
 
 
 ###############################################
@@ -78,31 +115,45 @@ def main():
     plt.show()
 
     # TODO: Create training and validation datasets
-    train_data = data
-    train_target = target
-    test_data = data
-    test_target = target
+    trainRatio = 0.75
+    indices = np.arange(len(data))
+    np.random.shuffle(indices)
+    trainInd = indices[:int(len(indices) * trainRatio)]
+    testInd = indices[len(trainInd):]
+    train_data = data[trainInd]
+    train_target = target[trainInd]
+    test_data = data[testInd]
+    test_target = target[testInd]
 
     # TODO : Apply any relevant transformation to the data
     # (e.g. filtering, normalization, dimensionality reduction)
+    _, minmaxInput = scaleData(data)
+    train_data, _ = scaleData(train_data, minmaxInput)
+    test_data, _ = scaleData(test_data, minmaxInput)
 
     # Create neural network
     # TODO : Tune the number and size of hidden layers
     model = Sequential()
-    model.add(Dense(units=1, activation='sigmoid',
+    model.add(Dense(units=16, activation='tanh',
                     input_shape=(data.shape[-1],)))
     model.add(Dense(units=target.shape[-1], activation='linear'))
     print(model.summary())
 
     # Define training parameters
     # TODO : Tune the training parameters
-    model.compile(optimizer=SGD(lr=1.0, momentum=0.1),
+    model.compile(optimizer=SGD(lr=0.1, momentum=0.9),
                   loss='mse')
 
     # Perform training
     # TODO : Tune the maximum number of iterations and desired error
     model.fit(train_data, train_target, batch_size=len(data),
-              epochs=100, shuffle=True, verbose=1)
+              epochs=1000, shuffle=True, verbose=1)
+
+    # Save trained model to disk
+    model.save('breast.h5')
+
+    # Test model (loading from disk)
+    model = load_model('breast.h5')
 
     # Print the number of classification errors from the training data
     targetPred = model.predict(train_data)
